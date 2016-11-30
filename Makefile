@@ -1,17 +1,18 @@
 
 CPP=g++
+PROGRAM = ims-svoz-odpadu
 
-all: ims-svoz-odpadu.o
-	$(CPP) -o ims-svoz-odpadu ims-svoz-odpadu.o -lsimlib -lm
+all: $(PROGRAM).o
+	$(CPP) -o $(PROGRAM) $(PROGRAM).o -lsimlib -lm
 	rm -f *.o
 	
 clean:
-	rm -f ims-svoz-odpadu
+	rm -f $(PROGRAM)
 
 run: 
-	./ims-svoz-odpadu
+	./$(PROGRAM)
 	
 test:
-	./ims-svoz-odpadu
+	./$(PROGRAM)
 	cat stats.out
 
