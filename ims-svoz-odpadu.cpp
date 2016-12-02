@@ -4,10 +4,13 @@
 #include <limits.h>
 #include <ctime>
 
-// Number of vertices in the graph
+// počet křižovatek
 #define V 9
 
-/* Let us create the example graph discussed above */
+/** 
+* modelovana oblast => graf krizovatek 
+* matice sousednosti
+*/
 int graph[V][V] = {{0, 4, 0, 0, 0, 0, 0, 8, 0},
                    {4, 0, 8, 0, 0, 0, 0, 11, 0},
                    {0, 8, 0, 7, 0, 4, 0, 0, 2},
@@ -18,6 +21,19 @@ int graph[V][V] = {{0, 4, 0, 0, 0, 0, 0, 8, 0},
                    {8, 11, 0, 0, 0, 0, 1, 0, 7},
                    {0, 0, 2, 0, 0, 0, 6, 7, 0}
                   };
+
+/** 
+* modelovana oblast => popis ulic
+* ZDE DEFINUJEME, VSECHNY POTREBNY UDEJA O ULICICH, jako je pocet domu, delka ulice, napojueni na krizovatky
+* ulice pod stejnym ID znamena, ze se jedna o jednu a tuttez ulici, ktera je napohjena na vice krizovatek
+* proste ma vic uzlu...
+* Popis sloupců: { ID ULICE , DELKA ULICE V METRECH , počet domů , křižovatka X , křižovatka Y }
+*/
+int ulice[3][6] = {
+  {1,500,34,2,5,6},
+  {2,50,24,2,5,6},
+  {2,70,6,2,5,6}
+};
 
 
 //  deklarace  globálních  objektů
@@ -56,6 +72,7 @@ class Auto : public Process {       // třída zákazníků
    
   // Function to print shortest path from source to j
   // using parent array
+  // DEBUG FUNKCE
   void printPath(int parent[], int j)
   {
       // Base Case : If j is source
@@ -69,6 +86,7 @@ class Auto : public Process {       // třída zákazníků
    
   // A utility function to print the constructed distance
   // array
+  // DEBUG FUNKCE
   int printSolution(int dist[], int n, int parent[])
   {
       int src = 0;
