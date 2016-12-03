@@ -17,3 +17,6 @@ test:
 	./$(PROGRAM)
 	cat $(STATS)
 
+memtest:
+	valgrind --leak-check=full -v --show-leak-kinds=all ./$(PROGRAM)
+

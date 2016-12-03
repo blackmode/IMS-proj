@@ -55,7 +55,7 @@ class Auto : public Process {       // třída zákazníků
     Prichod = Time;               // čas příchodu zákazníka
     Wait(10);                     // obsluha
     
-    dijkstra(graph, 1,4);
+    dijkstra(graph, 8,5);
   }
 
   // A utility function to find the vertex with minimum distance
@@ -76,10 +76,10 @@ class Auto : public Process {       // třída zákazníků
       // Function to print shortest path from source to j
       // using parent array
       // DEBUG FUNKCE
-    void printPath(int parent[], int j)
+    void printPath(int parent[], int j, int src)
     {
         int k = j;
-        int src = 0;
+        //int src = 0;
         int c = 0;
         int i = 0;
 
@@ -96,6 +96,7 @@ class Auto : public Process {       // třída zákazníků
             k = parent[k];
             c++;
 
+            // DEBUG
             if (c>200) {
                 printf("Doslo k zacykleni!!!\n");
                 break;
@@ -113,6 +114,11 @@ class Auto : public Process {       // třída zákazníků
         {
             // jakmile jsem narazil na -1 tak jsem na konci cesty
             if ( nejkratsi_cesta[count]==-1) {
+                if (nejkratsi_cesta[count-1]!=src) {
+                    nejkratsi_cesta[count] = src;
+                    break;
+                }
+
                 count--;
                 break;
             }
@@ -133,6 +139,7 @@ class Auto : public Process {       // třída zákazníků
         for ( i = 0;i<V; i++)
            nejkratsi_cesta[i] = -1;
 
+        // vypis pole
         for (i = 0;i<count+1; i++)
         {
             nejkratsi_cesta[i] = temp[i];
@@ -146,16 +153,17 @@ class Auto : public Process {       // třída zákazníků
   // A utility function to print the constructed distance
   // array
   // DEBUG FUNKCE
-  int printSolution(int dist[], int n, int parent[],int src, int dest)
+  int printAllPath(int dist[], int n, int parent[],int src, int dest)
   {
       printf("Vertex\t\t  Distance\t\tPath");
-      for (int i = 1; i < V; i++)
+      for (int i = 0; i < V; i++)
       {
           printf("\n%d -> %d \t\t\t %d\t\t ", src, i, dist[i]);
-          printPath(parent, i);
+          printPath(parent, i, src);
       }
   }
-   
+
+
   // Funtion that implements Dijkstra's single source shortest path
   // algorithm for a graph represented using adjacency matrix
   // representation
@@ -210,7 +218,9 @@ class Auto : public Process {       // třída zákazníků
               }  
       }
 
-      printSolution(dist, V, parent,src, dest);
+        printf("Vertex\t\t  Distance\t\tPath");
+        printf("\n%d -> %d \t\t\t %d\t\t ", src, dest, dist[dest]);
+        printPath(parent, dest, src);
   }
 
 
