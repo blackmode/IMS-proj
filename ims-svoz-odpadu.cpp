@@ -35,6 +35,9 @@ int ulice[3][6] = {
   {2,70,6,2,5,6}
 };
 
+// Vysledne pole pro nejratsi cestu
+int nejkratsi_cesta[V] = {0,0,0,0,0,0,0,0,0};
+int nejkratsi_cesta_index = 0;
 
 //  deklarace  globálních  objektů
 Facility  Box("Linka");
@@ -73,17 +76,87 @@ class Auto : public Process {       // třída zákazníků
   // Function to print shortest path from source to j
   // using parent array
   // DEBUG FUNKCE
-  void printPath(int parent[], int j)
+  void printPath2(int parent[], int j)
   {
+      
       // Base Case : If j is source
       if (parent[j]==-1)
           return;
-   
-      printPath(parent, parent[j]);
-   
+     
+      printPath2(parent, parent[j]);
+      
       printf("%d ", j);
   }
-   
+
+
+void printPath(int parent[], int j)
+{
+    int k = j;
+    int src = 0;
+    int c = 0;
+    int i = 0;
+
+    // init
+    for ( i = 0;i<V; i++)
+    {
+       nejkratsi_cesta[i] = -1;
+    }
+
+    // vygenerovani vysledne cesty, bude ale invertovana
+    // takze ju jeste musime otocit
+    while(k<=V && parent[k]!=src) 
+    {
+       //printf("%d ", k);   
+        nejkratsi_cesta[c] = k;
+        k = parent[k];
+        c++;
+
+        if (c>200) {
+            printf("Doslo k zacykleni!!!\n");
+            break;
+        }
+    }
+    // zde jeste musim ulouzit posledni uzel cesty
+    nejkratsi_cesta[c] = k;
+
+    // zde bude ulozen index pole, kde konci vysledna cesta v poli: nejkratsi_cesta[]
+    // aby se pak mohla invertovat
+    int count;
+
+    for (count = 0;count<V; count++)
+    {
+        // jakmile jsem narazil na -1 tak jsem na konci cesty
+        if ( nejkratsi_cesta[count]==-1) {
+            count--;
+            break;
+        }
+    }
+
+    // deklarace podle toho, jak je cesta dlouha
+    int temp[count+1];
+
+    // init docasneho pole
+    for (int ti = 0;ti<count+1; ti++)
+       temp[ti] = -1;
+
+    // obraceni pole
+    for (int i = count,h=0; i>=0; i--, h++)
+        temp[h] = nejkratsi_cesta[i];
+
+    // reset vysledneho pole
+    for ( i = 0;i<V; i++)
+       nejkratsi_cesta[i] = -1;
+
+    for (i = 0;i<count+1; i++)
+    {
+        nejkratsi_cesta[i] = temp[i];
+        printf("%d ", temp[i]);
+    }
+
+    printf("|%d|", count);
+ }
+
+
   // A utility function to print the constructed distance
   // array
   // DEBUG FUNKCE
@@ -120,7 +193,7 @@ class Auto : public Process {       // třída zákazníků
           dist[i] = INT_MAX;
           sptSet[i] = false;
       }
-   
+
       // Distance of source vertex from itself is always 0
       dist[src] = 0;
    
@@ -151,7 +224,6 @@ class Auto : public Process {       // třída zákazníků
               }  
       }
    
-      // print the constructed distance array
       printSolution(dist, V, parent);
   }
 
@@ -170,16 +242,13 @@ int main()
 {
 
 
- 
-
-
-
-
   Print("***** MODEL1 *****\n");
   Init(0,1000);              // inicializace experimentu
   (new Generator)->Activate(); // generátor zákazníků, aktivace
   Run();                     // simulace
   Box.Output();              // tisk výsledků
   Tabulka.Output();
+
+
   return 0;
 }

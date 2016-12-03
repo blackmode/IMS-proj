@@ -4,7 +4,7 @@ PROGRAM = ims-svoz-odpadu
 STATS = stats.out
 
 all: $(PROGRAM).o
-	$(CPP) -o $(PROGRAM) $(PROGRAM).o -lsimlib -lm
+	$(CPP) -o $(PROGRAM) $(PROGRAM).o -lsimlib -lm -Wall -Wextra
 	
 clean:
 	rm -f $(PROGRAM)
