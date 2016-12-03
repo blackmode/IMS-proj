@@ -55,7 +55,7 @@ class Auto : public Process {       // třída zákazníků
     Prichod = Time;               // čas příchodu zákazníka
     Wait(10);                     // obsluha
     
-    dijkstra(graph, 0);
+    dijkstra(graph, 1,4);
   }
 
   // A utility function to find the vertex with minimum distance
@@ -73,100 +73,85 @@ class Auto : public Process {       // třída zákazníků
       return min_index;
   }
    
-  // Function to print shortest path from source to j
-  // using parent array
-  // DEBUG FUNKCE
-  void printPath2(int parent[], int j)
-  {
-      
-      // Base Case : If j is source
-      if (parent[j]==-1)
-          return;
-     
-      printPath2(parent, parent[j]);
-      
-      printf("%d ", j);
-  }
-
-
-void printPath(int parent[], int j)
-{
-    int k = j;
-    int src = 0;
-    int c = 0;
-    int i = 0;
-
-    // init
-    for ( i = 0;i<V; i++)
+      // Function to print shortest path from source to j
+      // using parent array
+      // DEBUG FUNKCE
+    void printPath(int parent[], int j)
     {
-       nejkratsi_cesta[i] = -1;
-    }
+        int k = j;
+        int src = 0;
+        int c = 0;
+        int i = 0;
 
-    // vygenerovani vysledne cesty, bude ale invertovana
-    // takze ju jeste musime otocit
-    while(k<=V && parent[k]!=src) 
-    {
-       //printf("%d ", k);   
+        // init
+        for ( i = 0;i<V; i++)
+            nejkratsi_cesta[i] = -1;
+
+        // vygenerovani vysledne cesty, bude ale invertovana
+        // takze ju jeste musime otocit
+        while(k<=V && parent[k]!=src && k!=-1) 
+        {
+            //printf("%d ", k);   
+            nejkratsi_cesta[c] = k;
+            k = parent[k];
+            c++;
+
+            if (c>200) {
+                printf("Doslo k zacykleni!!!\n");
+                break;
+            }
+        }
+        // zde jeste musim ulouzit posledni uzel cesty
         nejkratsi_cesta[c] = k;
-        k = parent[k];
-        c++;
+        //printf("%d ", k);  
 
-        if (c>200) {
-            printf("Doslo k zacykleni!!!\n");
-            break;
+        // zde bude ulozen index pole, kde konci vysledna cesta v poli: nejkratsi_cesta[]
+        // aby se pak mohla invertovat
+        int count;
+
+        for (count = 0;count<V; count++)
+        {
+            // jakmile jsem narazil na -1 tak jsem na konci cesty
+            if ( nejkratsi_cesta[count]==-1) {
+                count--;
+                break;
+            }
         }
-    }
-    // zde jeste musim ulouzit posledni uzel cesty
-    nejkratsi_cesta[c] = k;
 
-    // zde bude ulozen index pole, kde konci vysledna cesta v poli: nejkratsi_cesta[]
-    // aby se pak mohla invertovat
-    int count;
+        // deklarace podle toho, jak je cesta dlouha
+        int temp[count+1];
 
-    for (count = 0;count<V; count++)
-    {
-        // jakmile jsem narazil na -1 tak jsem na konci cesty
-        if ( nejkratsi_cesta[count]==-1) {
-            count--;
-            break;
+        // init docasneho pole
+        for (int ti = 0;ti<count+1; ti++)
+           temp[ti] = -1;
+
+        // obraceni pole
+        for (int i = count,h=0; i>=0; i--, h++)
+            temp[h] = nejkratsi_cesta[i];
+
+        // reset vysledneho pole
+        for ( i = 0;i<V; i++)
+           nejkratsi_cesta[i] = -1;
+
+        for (i = 0;i<count+1; i++)
+        {
+            nejkratsi_cesta[i] = temp[i];
+            printf("%d ", temp[i]);
         }
-    }
 
-    // deklarace podle toho, jak je cesta dlouha
-    int temp[count+1];
-
-    // init docasneho pole
-    for (int ti = 0;ti<count+1; ti++)
-       temp[ti] = -1;
-
-    // obraceni pole
-    for (int i = count,h=0; i>=0; i--, h++)
-        temp[h] = nejkratsi_cesta[i];
-
-    // reset vysledneho pole
-    for ( i = 0;i<V; i++)
-       nejkratsi_cesta[i] = -1;
-
-    for (i = 0;i<count+1; i++)
-    {
-        nejkratsi_cesta[i] = temp[i];
-        printf("%d ", temp[i]);
-    }
-
-    printf("|%d|", count);
- }
+        printf("|%d|", count);
+     }
 
 
   // A utility function to print the constructed distance
   // array
   // DEBUG FUNKCE
-  int printSolution(int dist[], int n, int parent[])
+  int printSolution(int dist[], int n, int parent[],int src, int dest)
   {
-      int src = 0;
-      printf("Vertex\t  Distance\tPath");
+      printf("Vertex\t\t  Distance\t\tPath");
       for (int i = 1; i < V; i++)
       {
-          printf("\n%d -> %d \t\t %d\t\t%d ", src, i, dist[i], src);
+          printf("\n%d -> %d \t\t\t %d\t\t ", src, i, dist[i]);
           printPath(parent, i);
       }
   }
@@ -174,7 +159,7 @@ void printPath(int parent[], int j)
   // Funtion that implements Dijkstra's single source shortest path
   // algorithm for a graph represented using adjacency matrix
   // representation
-  void dijkstra(int graph[V][V], int src)
+  void dijkstra(int graph[V][V], int src, int dest)
   {
       int dist[V];  // The output array. dist[i] will hold
                     // the shortest distance from src to i
@@ -185,7 +170,8 @@ void printPath(int parent[], int j)
    
       // Parent array to store shortest path tree
       int parent[V];
-   
+           for (int i = 0;i<V; i++)
+            parent[i] = -1;
       // Initialize all distances as INFINITE and stpSet[] as false
       for (int i = 0; i < V; i++)
       {
@@ -223,8 +209,8 @@ void printPath(int parent[], int j)
                   dist[v] = dist[u] + graph[u][v];
               }  
       }
-   
-      printSolution(dist, V, parent);
+
+      printSolution(dist, V, parent,src, dest);
   }
 
 
@@ -248,7 +234,6 @@ int main()
   Run();                     // simulace
   Box.Output();              // tisk výsledků
   Tabulka.Output();
-
 
   return 0;
 }
