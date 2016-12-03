@@ -20,3 +20,7 @@ test:
 memtest:
 	valgrind --leak-check=full -v --show-leak-kinds=all ./$(PROGRAM)
 
+github:
+	git pull origin master
+	git commit -am "update"
+	git push origin master

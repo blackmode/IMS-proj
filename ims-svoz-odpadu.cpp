@@ -234,7 +234,6 @@ class Auto : public Process {       // třída zákazníků
 
 
 
-
 };
 
 class Generator : public Event {  // generátor zákazníků
