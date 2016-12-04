@@ -8,6 +8,8 @@
 
 // počet ULIC
 #define POCET_ULIC 50
+#define MAX_POCET_ULIC_DEN 10 // Kolik ulic bude maximalne na den zpracovavat jedno auto
+
 
 // počet ULIC
 #define POCET_KRIZOVATEK 50
@@ -26,10 +28,10 @@ const int TYDEN = DEN*7; // tyden
 const int ULICE_ID = 0;
 const int ULICE_DELKA = 1;
 const int ULICE_POCET_DOMU = 2;
-const int ULICE_TYP_ULICE = 3;		//  NORMAL/JEDNOSMERKA 
-const int ULICE_TYP_ZASTAVBY = 3;	// bytovka/rodinny dum/panelak apod.
-const int ULICE_KRIZOVATKA_X = 4;	// kazda ulice ci jeji cast je definovana krizovatkou/uzlem X 
-const int ULICE_KRIZOVATKA_Y = 5;	// kazda ulice ci jeji cast je definovana krizovatkou/uzlem Y
+const int ULICE_TYP_ULICE = 3;		// NORMAL/JEDNOSMERKA 
+const int ULICE_TYP_ZASTAVBY = 4;	// bytovka/rodinny dum/panelak apod.
+const int ULICE_KRIZOVATKA_X = 5;	// kazda ulice ci jeji cast je definovana krizovatkou/uzlem X 
+const int ULICE_KRIZOVATKA_Y = 6;	// kazda ulice ci jeji cast je definovana krizovatkou/uzlem Y
 
 // jakej je zrovne den v tydnu
 int den_v_tydnu = -1;
@@ -83,7 +85,7 @@ class Auto : public Process {     // třída zákazníků
 	int ujeta_vzdalenost;           // atribut každého zákazníka
 
 	public: 
-		Auto () {
+		Auto (int trasy[5][MAX_POCET_ULIC_DEN]) {
 
 		}
 
@@ -307,8 +309,21 @@ class Auto : public Process {     // třída zákazníků
 };
 
 class Generator : public Event {  // generátor zákazníků
+int trasyg[5][MAX_POCET_ULIC_DEN];
+
+public:
+	Generator(int trasy[5][MAX_POCET_ULIC_DEN]) {
+		for (int i = 0; i < 5; ++i)
+		{
+			for (int j = 0; j < MAX_POCET_ULIC_DEN; ++j)
+			{
+				trasyg[i][j] = trasy[i][j];
+			}
+		}
+	}
+
   void Behavior() {               // popis chování generátoru
-	(new Auto)->Activate();     // nový zákazník v čase Time
+	(new Auto(trasyg))->Activate();     // nový zákazník v čase Time
 	//Activate(Time+Exponential(1e3/150)); // interval mezi příchody
   }
 };
@@ -359,11 +374,23 @@ class Gen_den : public Event {
 int main()
 {
 
-
   Print("***** MODEL1 *****\n");
   Init(0,5*TYDEN);              // inicializace experimentu
-  (new Gen_den)->Activate(); // generátor zákazníků, aktivace
-  (new Generator)->Activate(); // generátor zákazníků, aktivace
+
+  // stridani dnu v tydnu
+  (new Gen_den)->Activate(); 
+
+  	// jake trasy pojede auto A
+	int trasy_A[5][MAX_POCET_ULIC_DEN] = {
+		{1,2,3,4,5,6,11,23,32,33},
+		{1,2,3,4,5,6,11,23,32,33},
+		{1,2,3,4,5,6,11,23,32,33},
+		{1,2,3,4,5,6,11,23,32,33},
+		{1,2,3,4,5,6,11,23,32,33}
+	};
+
+	// popelarsky vuz A
+  (new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
   Run();                     // simulace
   Skladka.Output();              // tisk výsledků
   Tabulka.Output();
