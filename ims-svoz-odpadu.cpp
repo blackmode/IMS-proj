@@ -66,7 +66,7 @@ int graph[POCET_KRIZOVATEK][POCET_KRIZOVATEK] = {
 * proste ma vic uzlu...
 * Popis sloupců: { ID ULICE , DELKA ULICE V METRECH ,počet domů ,typ zastavby ,typ ulice , křižovatka X , křižovatka Y }
 */
-int ulice[14][7] = {
+int ulice[16][7] = {
   {1,7,4,1,0,7,8},
 
   {2,1,1,1,0,7,6},
@@ -89,7 +89,11 @@ int ulice[14][7] = {
   {9,14,20,1,0,3,5},
 
   {10,2,1,1,0,2,8},
-  {10,6,4,1,0,8,6}
+  {10,6,4,1,0,8,6},
+//------------------------------------------ zde se nic nezpracovava
+  {11,20,0,0,0,6,9}, // depo
+
+  {12,14,0,0,0,4,10} // skladka
 };
 
 // Vysledne pole pro nejratsi cestu
