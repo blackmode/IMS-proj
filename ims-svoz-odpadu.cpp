@@ -42,6 +42,8 @@ int je_vikend = 0;
 
 /** 
 * modelovana oblast => graf krizovatek 
+* POKUD JEDNA ULICE BUDE MIT VICE JAK DVA UZLY (bude nutne ji rozdelit) tak ty uzly pojmenovavat postupne tak,
+* aby, nejnizsi ID uzlu byl zacatek/konec ulice a nejvyssi ID uzlu konec/zacatek ALE NE Prostredek
 * matice sousednosti
 */
 int graph[POCET_KRIZOVATEK][POCET_KRIZOVATEK] = {
@@ -135,7 +137,9 @@ class Auto : public Process {
 			// zpracovani ulic pro dany den
 			while(zpracovano_ulic < MAX_POCET_ULIC_DEN and trasy[den_v_tydnu][zpracovano_ulic]!=-1) 
 			{
-				printf("%d\n", DEPO);
+				printf("%d\n", trasy[den_v_tydnu][zpracovano_ulic]);
+				break;
+				// Musim nacist vsechny uzly pro danou ulici
 				zpracovano_ulic++;
 			}
 
