@@ -11,10 +11,11 @@
 #define POCET_ULIC 50
 #define MAX_POCET_ULIC_DEN 10 // Kolik ulic bude maximalne na den zpracovavat jedno auto
 
-#define DEPO 3 // // uzel(KRIZOVATKA) na kterem se nachazi depo odkud vyrazi auto
+#define DEPO 9 		//  uzel(KRIZOVATKA) na kterem se nachazi depo odkud vyrazi auto
+#define SKLADKA 10	//  uzel(SKLADKA) na kterem se nachazi skladka kam jede auto vyvezt odpad 
 
 // počet křižovatek
-#define POCET_KRIZOVATEK 9
+#define POCET_KRIZOVATEK 11
 
 // CASOVE KONSTANTY
 const int MINUTA = 60; // SEKUND
@@ -44,16 +45,19 @@ int je_vikend = 0;
 * matice sousednosti
 */
 int graph[POCET_KRIZOVATEK][POCET_KRIZOVATEK] = {
-				   {0, 4, 0, 0, 0, 0, 0, 8, 0},
-				   {4, 0, 8, 0, 0, 0, 0, 11, 0},
-				   {0, 8, 0, 7, 0, 4, 0, 0, 2},
-				   {0, 0, 7, 0, 9, 14, 0, 0, 0},
-				   {0, 0, 0, 9, 0, 10, 0, 0, 0},
-				   {0, 0, 4, 0, 10, 0, 2, 0, 0},
-				   {0, 0, 0, 14, 0, 2, 0, 1, 6},
-				   {8, 11, 0, 0, 0, 0, 1, 0, 7},
-				   {0, 0, 2, 0, 0, 0, 6, 7, 0}
-				  };
+	//  0  1  2  3  4  5  6  7  8  9  10
+	   {0, 4, 0, 0, 0, 0, 0, 8, 0, 0, 0},	// 0
+	   {4, 0, 8, 0, 0, 0, 0, 11, 0, 0, 0},	// 1
+	   {0, 8, 0, 7, 0, 4, 0, 0, 2, 0, 0},	// 2
+	   {0, 0, 7, 0, 9, 14, 0, 0, 0, 0, 0},	// 3
+	   {0, 0, 0, 9, 0, 10, 0, 0, 0, 0, 14},	// 4
+	   {0, 0, 4, 0, 10, 0, 2, 0, 0, 0, 0},	// 5
+	   {0, 0, 0, 14, 0, 2, 0, 1, 6, 20, 0},	// 6
+	   {8, 11, 0, 0, 0, 0, 1, 0, 7, 0, 0},	// 7
+	   {0, 0, 2, 0, 0, 0, 6, 7, 0, 0, 0},	// 8
+	   {0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 0},	// 9
+	   {0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0}	// 10
+};
 
 /** 
 * modelovana oblast => popis ulic
@@ -85,7 +89,7 @@ int ulice[14][7] = {
   {9,14,20,1,0,3,5},
 
   {10,2,1,1,0,2,8},
-  {10,6,4,1,0,8,6},
+  {10,6,4,1,0,8,6}
 };
 
 // Vysledne pole pro nejratsi cestu
