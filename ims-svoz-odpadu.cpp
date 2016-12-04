@@ -15,12 +15,21 @@
 // počet křižovatek => provizorni
 #define V 9
 
-
+// CASOVE KONSTANTY
 const int MINUTA = 60; // SEKUND
 const int HODINA = MINUTA*60; // hodina
 const int DEN = HODINA*24; // den
 const int TYDEN = DEN*7; // tyden
 
+// KONSTANTY ULIC
+// jedna se o sloupec v matici NxN tj. ktery sloupec je ktery
+const int ULICE_ID = 0;
+const int ULICE_DELKA = 1;
+const int ULICE_POCET_DOMU = 2;
+const int ULICE_TYP_ULICE = 3;		//  NORMAL/JEDNOSMERKA 
+const int ULICE_TYP_ZASTAVBY = 3;	// bytovka/rodinny dum/panelak apod.
+const int ULICE_KRIZOVATKA_X = 4;	// kazda ulice ci jeji cast je definovana krizovatkou/uzlem X 
+const int ULICE_KRIZOVATKA_Y = 5;	// kazda ulice ci jeji cast je definovana krizovatkou/uzlem Y
 
 // jakej je zrovne den v tydnu
 int den_v_tydnu = -1;
@@ -69,24 +78,33 @@ Histogram Tabulka("Tabulka",0,50,10);
 
 
 
-class Auto : public Process {       // třída zákazníků
-  double Prichod;                 // atribut každého zákazníka
+class Auto : public Process {     // třída zákazníků
+	double Prichod;                 // atribut každého zákazníka
+	int ujeta_vzdalenost;           // atribut každého zákazníka
 
-  void Behavior() {               // popis chování zákazníka
-	Prichod = Time;               // čas příchodu zákazníka
-	Wait(10);                     // obsluha
-	
-	dijkstra(graph, 8,5);
-	p(nejkratsi_cesta, V);
+	public: 
+		Auto () {
 
-	dijkstra(graph, 0,5);
-	p(nejkratsi_cesta, V);
+		}
 
-	dijkstra(graph, 3,6);
-	p(nejkratsi_cesta, V);
 
-	printf("\n\n\n\n => |%d|", get_street(ulice, 6,9));
-  }
+	void Behavior() {               // popis chování zákazníka
+		Prichod = Time;               // čas příchodu zákazníka
+
+		Wait(10);                     // obsluha
+		
+		dijkstra(graph, 8,5);
+		p(nejkratsi_cesta, V);
+
+		dijkstra(graph, 0,5);
+		p(nejkratsi_cesta, V);
+
+		dijkstra(graph, 3,6);
+		p(nejkratsi_cesta, V);
+
+		printf("\n\n\n\n => |%d|", get_street(ulice, 6,9));
+
+	}
 
 
   // debug print: vypise pole int o urcite velikosti
@@ -298,7 +316,9 @@ class Generator : public Event {  // generátor zákazníků
 class Gen_den : public Event { 
 
   void Behavior() { 
-  	printf("\nDen v tydnu: %d , je vikend: %d", den_v_tydnu, je_vikend);
+  	if (DEBUG_MODE) {
+  		printf("\nDen v tydnu: %d , je vikend: %d", den_v_tydnu, je_vikend);
+  	}
 	if (den_v_tydnu >=0 && den_v_tydnu<5) 
 	{
 		den_v_tydnu++;
@@ -311,7 +331,9 @@ class Gen_den : public Event {
 		
 		// pokud je nedele, tak dalsi den je pondeli => 0 
 		if (den_v_tydnu==6){
-			printf("\n----------\n ");
+			if (DEBUG_MODE) {
+				printf("\n----------\n ");
+			}
 			den_v_tydnu=0;
 			je_vikend = 0;
 		}
