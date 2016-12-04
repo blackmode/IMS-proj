@@ -11,11 +11,8 @@
 #define MAX_POCET_ULIC_DEN 10 // Kolik ulic bude maximalne na den zpracovavat jedno auto
 
 
-// počet ULIC
-#define POCET_KRIZOVATEK 50
-
-// počet křižovatek => provizorni
-#define V 9
+// počet křižovatek
+#define POCET_KRIZOVATEK 9
 
 // CASOVE KONSTANTY
 const int MINUTA = 60; // SEKUND
@@ -44,7 +41,7 @@ int je_vikend = 0;
 * modelovana oblast => graf krizovatek 
 * matice sousednosti
 */
-int graph[V][V] = {{0, 4, 0, 0, 0, 0, 0, 8, 0},
+int graph[POCET_KRIZOVATEK][POCET_KRIZOVATEK] = {{0, 4, 0, 0, 0, 0, 0, 8, 0},
 				   {4, 0, 8, 0, 0, 0, 0, 11, 0},
 				   {0, 8, 0, 7, 0, 4, 0, 0, 2},
 				   {0, 0, 7, 0, 9, 14, 0, 0, 0},
@@ -69,7 +66,7 @@ int ulice[3][7] = {
 };
 
 // Vysledne pole pro nejratsi cestu
-int nejkratsi_cesta[V] = {0,0,0,0,0,0,0,0,0};
+int nejkratsi_cesta[POCET_KRIZOVATEK] = {0,0,0,0,0,0,0,0,0};
 
 //  deklarace  globálních  objektů
 Facility  Skladka("Skládka odpadu");
@@ -100,16 +97,16 @@ class Auto : public Process {     // třída zákazníků
 	void Behavior() {               // popis chování zákazníka
 		Prichod = Time;               // čas příchodu zákazníka
 
-		Wait(10);                     // obsluha
+		Wait(10);                     // obsluha V
 		
 		dijkstra(graph, 8,5);
-		p(nejkratsi_cesta, V);
+		p(nejkratsi_cesta, POCET_KRIZOVATEK);
 
 		dijkstra(graph, 0,5);
-		p(nejkratsi_cesta, V);
+		p(nejkratsi_cesta, POCET_KRIZOVATEK);
 
 		dijkstra(graph, 3,6);
-		p(nejkratsi_cesta, V);
+		p(nejkratsi_cesta, POCET_KRIZOVATEK);
 
 		printf("\n\n\n\n => |%d|", get_street(ulice, 6,9));
 
@@ -135,7 +132,7 @@ class Auto : public Process {     // třída zákazníků
 	  // Initialize min value
 	  int min = INT_MAX, min_index;
    
-	  for (int v = 0; v < V; v++)
+	  for (int v = 0; v < POCET_KRIZOVATEK; v++)
 		  if (sptSet[v] == false && dist[v] <= min)
 			  min = dist[v], min_index = v;
    
@@ -153,14 +150,14 @@ class Auto : public Process {     // třída zákazníků
 		int i = 0;
 
 		// init
-		for ( i = 0;i<V; i++)
+		for ( i = 0;i<POCET_KRIZOVATEK; i++)
 			nejkratsi_cesta[i] = -1;
 
 		// vygenerovani vysledne cesty, bude ale invertovana
 		// takze ju jeste musime otocit
-		while(k<=V && parent[k]!=src && k!=-1) 
+		while(k<=POCET_KRIZOVATEK && parent[k]!=src && k!=-1) 
 		{
-			//printf("%d ", k);   
+			//printf("%d ", k);  //V 
 			nejkratsi_cesta[c] = k;
 			k = parent[k];
 			c++;
@@ -180,7 +177,7 @@ class Auto : public Process {     // třída zákazníků
 		// aby se pak mohla invertovat
 		int count;
 
-		for (count = 0;count<V; count++)
+		for (count = 0;count<POCET_KRIZOVATEK; count++)
 		{
 			// jakmile jsem narazil na -1 tak jsem na konci cesty
 			if ( nejkratsi_cesta[count]==-1) {
@@ -206,7 +203,7 @@ class Auto : public Process {     // třída zákazníků
 			temp[h] = nejkratsi_cesta[i];
 
 		// reset vysledneho pole
-		for ( i = 0;i<V; i++)
+		for ( i = 0;i<POCET_KRIZOVATEK; i++)
 		   nejkratsi_cesta[i] = -1;
 
 		// vypis pole
@@ -228,7 +225,7 @@ class Auto : public Process {     // třída zákazníků
   int printAllPath(int dist[], int n, int parent[],int src, int dest)
   {
 	  printf("Vertex\t\t  Distance\t\tPath");
-	  for (int i = 0; i < V; i++)
+	  for (int i = 0; i < POCET_KRIZOVATEK; i++)
 	  {
 		  printf("\n%d -> %d \t\t\t %d\t\t ", src, i, dist[i]);
 		  printPath(parent, i, src);
@@ -239,23 +236,23 @@ class Auto : public Process {     // třída zákazníků
   // Funtion that implements Dijkstra's single source shortest path
   // algorithm for a graph represented using adjacency matrix
   // representation
-  int dijkstra(int graph[V][V], int src, int dest)
+  int dijkstra(int graph[POCET_KRIZOVATEK][POCET_KRIZOVATEK], int src, int dest)
   {
-		int dist[V];  // The output array. dist[i] will hold
+		int dist[POCET_KRIZOVATEK];  // The output array. dist[i] will hold
 					// the shortest distance from src to i
 
 		// sptSet[i] will true if vertex i is included / in shortest
 		// path tree or shortest distance from src to i is finalized
-		bool sptSet[V];
+		bool sptSet[POCET_KRIZOVATEK];
 
 		// Parent array to store shortest path tree
-		int parent[V];
+		int parent[POCET_KRIZOVATEK];
 		   
-		for (int i = 0;i<V; i++)
+		for (int i = 0;i<POCET_KRIZOVATEK; i++)
 			parent[i] = -1;
 		
 		// Initialize all distances as INFINITE and stpSet[] as false
-		for (int i = 0; i < V; i++)
+		for (int i = 0; i < POCET_KRIZOVATEK; i++)
 		{
 		  parent[0] = -1;
 		  dist[i] = INT_MAX;
@@ -265,8 +262,8 @@ class Auto : public Process {     // třída zákazníků
 		// Distance of source vertex from itself is always 0
 		dist[src] = 0;
 
-		// Find shortest path for all vertices
-		for (int count = 0; count < V-1; count++)
+		// Find shortest path for all vertices V
+		for (int count = 0; count < POCET_KRIZOVATEK-1; count++)
 		{
 		  // Pick the minimum distance vertex from the set of
 		  // vertices not yet processed. u is always equal to src
@@ -278,7 +275,7 @@ class Auto : public Process {     // třída zákazníků
 
 		  // Update dist value of the adjacent vertices of the
 		  // picked vertex.
-		  for (int v = 0; v < V; v++)
+		  for (int v = 0; v < POCET_KRIZOVATEK; v++)
 
 			  // Update dist[v] only if is not in sptSet, there is
 			  // an edge from u to v, and total weight of path from
@@ -316,23 +313,23 @@ class Auto : public Process {     // třída zákazníků
 };
 
 class Generator : public Event {  // generátor zákazníků
-int trasy[5][MAX_POCET_ULIC_DEN];
+	int trasy[5][MAX_POCET_ULIC_DEN];
 
-public:
-	Generator(int trasy[5][MAX_POCET_ULIC_DEN]) {
-		for (int i = 0; i < 5; ++i)
-		{
-			for (int j = 0; j < MAX_POCET_ULIC_DEN; ++j)
+	public:
+		Generator(int trasy[5][MAX_POCET_ULIC_DEN]) {
+			for (int i = 0; i < 5; ++i)
 			{
-				trasy[i][j] = trasy[i][j];
+				for (int j = 0; j < MAX_POCET_ULIC_DEN; ++j)
+				{
+					trasy[i][j] = trasy[i][j];
+				}
 			}
 		}
-	}
 
-  void Behavior() {               // popis chování generátoru
-	(new Auto(trasy))->Activate();     // nový zákazník v čase Time
-	//Activate(Time+Exponential(1e3/150)); // interval mezi příchody
-  }
+	void Behavior() {               		// popis chování generátoru
+		(new Auto(trasy))->Activate();      // nový zákazník v čase Time
+		//Activate(Time+Exponential(1e3/150));  // interval mezi příchody
+	}
 };
 
 
