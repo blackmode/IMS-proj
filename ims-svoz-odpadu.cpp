@@ -6,6 +6,12 @@
 
 #define DEBUG_MODE 1
 
+// počet ULIC
+#define POCET_ULIC 50
+
+// počet ULIC
+#define POCET_KRIZOVATEK 50
+
 // počet křižovatek
 #define V 9
 
@@ -33,8 +39,8 @@ int graph[V][V] = {{0, 4, 0, 0, 0, 0, 0, 8, 0},
 */
 int ulice[3][7] = {
   {1,500,2,34,2,5,6},
-  {2,50,2,24,2,5,6},
-  {2,70,2,6,2,5,6}
+  {2,50,2,24,2,2,4},
+  {2,70,2,6,2,9,6}
 };
 
 // Vysledne pole pro nejratsi cestu
@@ -57,8 +63,28 @@ class Auto : public Process {       // třída zákazníků
 	Wait(10);                     // obsluha
 	
 	dijkstra(graph, 8,5);
+	p(nejkratsi_cesta, V);
 
+	dijkstra(graph, 0,5);
+	p(nejkratsi_cesta, V);
+
+	dijkstra(graph, 3,6);
+	p(nejkratsi_cesta, V);
+
+	printf("\n\n\n\n => |%d|", get_street(ulice, 6,9));
   }
+
+
+  // debug print: vypise pole int o urcite velikosti
+  void p(int pole[], int velikost) {
+	  printf("\n");
+	  for (int i = 0; i < velikost; i++)
+	  {
+		  printf("%d ",pole[i]);
+	  }
+	  printf("\n");
+  }
+
 
   // A utility function to find the vertex with minimum distance
   // value, from the set of vertices not yet included in shortest
@@ -231,7 +257,17 @@ class Auto : public Process {       // třída zákazníků
 		return dist[dest];
   }
 
-
+  	// podle zadane casti ulice zjistim jeji ID
+	int get_street(int streets[][7], int src, int dest) 
+	{
+		for (int i = 0; i < POCET_ULIC; ++i)
+		{
+			if ( (streets[i][5] == src && streets[i][6] == dest) || (streets[i][6] == src && streets[i][5] == dest)) {
+				return i;
+			}
+		}
+		return -1;
+	}
 
 
 };
