@@ -204,10 +204,12 @@ class Auto : public Process {     // třída zákazníků
 		for (i = 0;i<count+1; i++)
 		{
 			nejkratsi_cesta[i] = temp[i];
-			printf("%d ", temp[i]);
+			if (DEBUG_MODE)
+				printf("%d ", temp[i]);
 		}
 
-		printf("|%d|", count);
+		if (DEBUG_MODE)
+			printf("|%d|", count);
 	 }
 
 
