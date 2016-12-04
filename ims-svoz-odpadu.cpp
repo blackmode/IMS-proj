@@ -83,10 +83,17 @@ Histogram Tabulka("Tabulka",0,50,10);
 class Auto : public Process {     // třída zákazníků
 	double Prichod;                 // atribut každého zákazníka
 	int ujeta_vzdalenost;           // atribut každého zákazníka
+	int trasy[5][MAX_POCET_ULIC_DEN];
 
 	public: 
 		Auto (int trasy[5][MAX_POCET_ULIC_DEN]) {
-
+			for (int i = 0; i < 5; ++i)
+			{
+				for (int j = 0; j < MAX_POCET_ULIC_DEN; ++j)
+				{
+					trasy[i][j] = trasy[i][j];
+				}
+			}
 		}
 
 
@@ -309,7 +316,7 @@ class Auto : public Process {     // třída zákazníků
 };
 
 class Generator : public Event {  // generátor zákazníků
-int trasyg[5][MAX_POCET_ULIC_DEN];
+int trasy[5][MAX_POCET_ULIC_DEN];
 
 public:
 	Generator(int trasy[5][MAX_POCET_ULIC_DEN]) {
@@ -317,13 +324,13 @@ public:
 		{
 			for (int j = 0; j < MAX_POCET_ULIC_DEN; ++j)
 			{
-				trasyg[i][j] = trasy[i][j];
+				trasy[i][j] = trasy[i][j];
 			}
 		}
 	}
 
   void Behavior() {               // popis chování generátoru
-	(new Auto(trasyg))->Activate();     // nový zákazník v čase Time
+	(new Auto(trasy))->Activate();     // nový zákazník v čase Time
 	//Activate(Time+Exponential(1e3/150)); // interval mezi příchody
   }
 };
