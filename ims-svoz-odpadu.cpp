@@ -12,8 +12,22 @@
 // počet ULIC
 #define POCET_KRIZOVATEK 50
 
-// počet křižovatek
+// počet křižovatek => provizorni
 #define V 9
+
+
+const int MINUTA = 60; // SEKUND
+const int HODINA = MINUTA*60; // hodina
+const int DEN = HODINA*24; // den
+const int TYDEN = DEN*7; // tyden
+
+
+// jakej je zrovne den v tydnu
+int den_v_tydnu = -1;
+
+// je vykend ci nikoliv
+int je_vikend = 0;
+
 
 /** 
 * modelovana oblast => graf krizovatek 
@@ -47,7 +61,7 @@ int ulice[3][7] = {
 int nejkratsi_cesta[V] = {0,0,0,0,0,0,0,0,0};
 
 //  deklarace  globálních  objektů
-Facility  Box("Linka");
+Facility  Skladka("Skládka odpadu");
 Histogram Tabulka("Tabulka",0,50,10);
 
 
@@ -279,16 +293,55 @@ class Generator : public Event {  // generátor zákazníků
   }
 };
 
+
+// stridani dne v tydnu
+class Gen_den : public Event { 
+
+  void Behavior() { 
+  	printf("\nDen v tydnu: %d , je vikend: %d", den_v_tydnu, je_vikend);
+	if (den_v_tydnu >=0 && den_v_tydnu<5) 
+	{
+		den_v_tydnu++;
+		if (den_v_tydnu==5) {
+			je_vikend = 1;
+		}
+		Activate(Time+DEN);
+	}
+	else if (den_v_tydnu==5 || den_v_tydnu==6) {
+		
+		// pokud je nedele, tak dalsi den je pondeli => 0 
+		if (den_v_tydnu==6){
+			printf("\n----------\n ");
+			den_v_tydnu=0;
+			je_vikend = 0;
+		}
+		else {
+			den_v_tydnu++;
+		}
+		Activate(Time+DEN);
+	}
+	else {
+		// init
+		den_v_tydnu = 0;
+		Activate(Time+DEN);
+	}
+
+  }
+};
+
+
+
 //  popis  experimentu
 int main()
 {
 
 
   Print("***** MODEL1 *****\n");
-  Init(0,1000);              // inicializace experimentu
+  Init(0,5*TYDEN);              // inicializace experimentu
+  (new Gen_den)->Activate(); // generátor zákazníků, aktivace
   (new Generator)->Activate(); // generátor zákazníků, aktivace
   Run();                     // simulace
-  Box.Output();              // tisk výsledků
+  Skladka.Output();              // tisk výsledků
   Tabulka.Output();
 
   return 0;
