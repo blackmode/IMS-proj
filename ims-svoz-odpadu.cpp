@@ -4,12 +4,14 @@
 #include <limits.h>
 #include <ctime>
 
+
 #define DEBUG_MODE 1
 
 // počet ULIC
 #define POCET_ULIC 50
 #define MAX_POCET_ULIC_DEN 10 // Kolik ulic bude maximalne na den zpracovavat jedno auto
 
+#define DEPO 3 // // uzel(KRIZOVATKA) na kterem se nachazi depo odkud vyrazi auto
 
 // počet křižovatek
 #define POCET_KRIZOVATEK 9
@@ -41,7 +43,8 @@ int je_vikend = 0;
 * modelovana oblast => graf krizovatek 
 * matice sousednosti
 */
-int graph[POCET_KRIZOVATEK][POCET_KRIZOVATEK] = {{0, 4, 0, 0, 0, 0, 0, 8, 0},
+int graph[POCET_KRIZOVATEK][POCET_KRIZOVATEK] = {
+				   {0, 4, 0, 0, 0, 0, 0, 8, 0},
 				   {4, 0, 8, 0, 0, 0, 0, 11, 0},
 				   {0, 8, 0, 7, 0, 4, 0, 0, 2},
 				   {0, 0, 7, 0, 9, 14, 0, 0, 0},
@@ -57,12 +60,32 @@ int graph[POCET_KRIZOVATEK][POCET_KRIZOVATEK] = {{0, 4, 0, 0, 0, 0, 0, 8, 0},
 * ZDE DEFINUJEME, VSECHNY POTREBNY UDEJA O ULICICH, jako je pocet domu, delka ulice, napojueni na krizovatky
 * ulice pod stejnym ID znamena, ze se jedna o jednu a tuttez ulici, ktera je napohjena na vice krizovatek
 * proste ma vic uzlu...
-* Popis sloupců: { ID ULICE , DELKA ULICE V METRECH , typ zastavby , počet domů , křižovatka X , křižovatka Y }
+* Popis sloupců: { ID ULICE , DELKA ULICE V METRECH ,počet domů ,typ zastavby ,typ ulice , křižovatka X , křižovatka Y }
 */
-int ulice[3][7] = {
-  {1,500,2,34,2,5,6},
-  {2,50,2,24,2,2,4},
-  {2,70,2,6,2,9,6}
+int ulice[14][7] = {
+  {1,7,4,1,0,7,8},
+
+  {2,1,1,1,0,7,6},
+  {2,2,2,1,0,6,5},
+
+  {3,4,5,1,0,0,1},
+  {3,8,6,1,0,1,2},
+  {3,7,4,1,0,2,3},
+
+  {4,4,6,1,0,2,5},
+
+  {5,9,11,1,0,3,4},
+
+  {6,10,8,1,0,5,4},
+
+  {7,8,9,1,0,0,7},
+
+  {8,11,15,1,0,1,7},
+
+  {9,14,20,1,0,3,5},
+
+  {10,2,1,1,0,2,8},
+  {10,6,4,1,0,8,6},
 };
 
 // Vysledne pole pro nejratsi cestu
@@ -73,19 +96,19 @@ Facility  Skladka("Skládka odpadu");
 Histogram Tabulka("Tabulka",0,50,10);
 
 
-
-
-
-
-class Auto : public Process {     // třída zákazníků
-	double Prichod;                 // atribut každého zákazníka
-	int ujeta_vzdalenost;           // atribut každého zákazníka
+class Auto : public Process {
+	double Prichod;                 // atribut každého Auta
+	int ujeta_vzdalenost;           // atribut každého Auta
 	int trasy[5][MAX_POCET_ULIC_DEN];
+	int depo; // uzel na kterem se nachazi depo odkud vyrazi auto
 
 	public: 
 		Auto (int trasy[5][MAX_POCET_ULIC_DEN]) {
-			for (int i = 0; i < 5; ++i)
-			{
+			// ujeta vzdalenost v mterech
+			ujeta_vzdalenost = 0;
+
+			// trasy ke zpracovani pro cely tyden
+			for (int i = 0; i < 5; ++i){
 				for (int j = 0; j < MAX_POCET_ULIC_DEN; ++j)
 				{
 					trasy[i][j] = trasy[i][j];
@@ -94,8 +117,22 @@ class Auto : public Process {     // třída zákazníků
 		}
 
 
-	void Behavior() {               // popis chování zákazníka
-		Prichod = Time;               // čas příchodu zákazníka
+	void Behavior() {                 // popis chování auta
+		Prichod = Time;               // čas vyjeti auta z depa
+
+		// ja pracovni tyden
+		if (!je_vikend) 
+		{
+			int zpracovano_ulic = 0;
+			// zpracovani ulic pro dany den
+			while(zpracovano_ulic < MAX_POCET_ULIC_DEN and trasy[den_v_tydnu][zpracovano_ulic]!=-1) 
+			{
+				printf("%d\n", DEPO);
+				zpracovano_ulic++;
+			}
+
+		}
+
 
 		Wait(10);                     // obsluha V
 		
@@ -377,6 +414,7 @@ class Gen_den : public Event {
 //  popis  experimentu
 int main()
 {
+	// POZN: pokud je pole vetsi nez datovej vstup, tak zbytek pole dopisem vzdycky  hodnotou -1 !!! 
 
   Print("***** MODEL1 *****\n");
   Init(0,5*TYDEN);              // inicializace experimentu
