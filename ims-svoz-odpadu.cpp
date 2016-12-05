@@ -3,12 +3,13 @@
 #include <stdio.h>
 #include <limits.h>
 #include <ctime>
-
+#include <iostream>
+#include <algorithm>
 
 #define DEBUG_MODE 1
 
 // počet ULIC
-#define POCET_ULIC 50
+#define POCET_ULIC 16
 #define MAX_POCET_ULIC_DEN 10 // Kolik ulic bude maximalne na den zpracovavat jedno auto
 
 #define DEPO 9 		//  uzel(KRIZOVATKA) na kterem se nachazi depo odkud vyrazi auto
@@ -68,7 +69,7 @@ int graph[POCET_KRIZOVATEK][POCET_KRIZOVATEK] = {
 * proste ma vic uzlu...
 * Popis sloupců: { ID ULICE , DELKA ULICE V METRECH ,počet domů ,typ zastavby ,typ ulice , křižovatka X , křižovatka Y }
 */
-int ulice[16][7] = {
+int ulice[POCET_ULIC][7] = {
   {1,7,4,1,0,7,8},
 
   {2,1,1,1,0,7,6},
@@ -109,8 +110,7 @@ Histogram Tabulka("Tabulka",0,50,10);
 class Auto : public Process {
 	double Prichod;                 // atribut každého Auta
 	int ujeta_vzdalenost;           // atribut každého Auta
-	int trasy[5][MAX_POCET_ULIC_DEN];
-	int depo; // uzel na kterem se nachazi depo odkud vyrazi auto
+	int trasy_auto[5][MAX_POCET_ULIC_DEN];
 
 	public: 
 		Auto (int trasy[5][MAX_POCET_ULIC_DEN]) {
@@ -121,7 +121,7 @@ class Auto : public Process {
 			for (int i = 0; i < 5; ++i){
 				for (int j = 0; j < MAX_POCET_ULIC_DEN; ++j)
 				{
-					trasy[i][j] = trasy[i][j];
+					trasy_auto[i][j] = trasy[i][j];
 				}
 			}
 		}
@@ -133,32 +133,68 @@ class Auto : public Process {
 		// ja pracovni tyden
 		if (!je_vikend) 
 		{
+			//while(1) {}
 			int zpracovano_ulic = 0;
+			int src = DEPO;				  		// odkud jsme vyjeli
+			int start_end_nodes[2] = {-1,-1};	// urcuje zacatek a konec ulice
+
 			// zpracovani ulic pro dany den
-			while(zpracovano_ulic < MAX_POCET_ULIC_DEN and trasy[den_v_tydnu][zpracovano_ulic]!=-1) 
+			while(zpracovano_ulic < MAX_POCET_ULIC_DEN and trasy_auto[den_v_tydnu][zpracovano_ulic]!=-1) 
 			{
-				printf("%d\n", trasy[den_v_tydnu][zpracovano_ulic]);
+				int id_ulice = trasy_auto[den_v_tydnu][zpracovano_ulic];
+				for (int i = 0; i < POCET_ULIC; ++i)
+				{
+					if (ulice[i][0] == id_ulice) 
+					{
+						// ulozeni prvniho uzlu
+						if (start_end_nodes[0]==-1 && start_end_nodes[1]==-1) {
+							start_end_nodes[0] = ulice[i][ULICE_KRIZOVATKA_X];
+							start_end_nodes[1] = ulice[i][ULICE_KRIZOVATKA_Y];
+						}
+						// hledam konec ulice
+						else {
+							if (start_end_nodes[0] == ulice[i][ULICE_KRIZOVATKA_X]) {
+								start_end_nodes[0] = ulice[i][ULICE_KRIZOVATKA_Y];
+							}
+							else if (start_end_nodes[0] == ulice[i][ULICE_KRIZOVATKA_Y]) {
+								start_end_nodes[0] = ulice[i][ULICE_KRIZOVATKA_X];
+							}
+							else if (start_end_nodes[1] == ulice[i][ULICE_KRIZOVATKA_X]) {
+								start_end_nodes[1] = ulice[i][ULICE_KRIZOVATKA_Y];
+							}
+							else if (start_end_nodes[1] == ulice[i][ULICE_KRIZOVATKA_Y]) {
+								start_end_nodes[1] = ulice[i][ULICE_KRIZOVATKA_X];
+							}
+						}
+
+					}
+				}
+
+				p(start_end_nodes, 2);
+				int r = Random()*2;
+				printf("%d\n", start_end_nodes[r]);
 				break;
 				// Musim nacist vsechny uzly pro danou ulici
-				zpracovano_ulic++;
+				// a vyhodit dest misto
+ 				zpracovano_ulic++;
 			}
 
 		}
 
 
-		Wait(10);                     // obsluha V
+		/*	Wait(10);                     // obsluha V
 		
-		dijkstra(graph, 8,5);
-		p(nejkratsi_cesta, POCET_KRIZOVATEK);
+			dijkstra(graph, 8,5);
+			p(nejkratsi_cesta, POCET_KRIZOVATEK);
 
-		dijkstra(graph, 0,5);
-		p(nejkratsi_cesta, POCET_KRIZOVATEK);
+			dijkstra(graph, 0,5);
+			p(nejkratsi_cesta, POCET_KRIZOVATEK);
 
-		dijkstra(graph, 3,6);
-		p(nejkratsi_cesta, POCET_KRIZOVATEK);
+			dijkstra(graph, 3,6);
+			p(nejkratsi_cesta, POCET_KRIZOVATEK);
 
-		printf("\n\n\n\n => |%d|", get_street(ulice, 6,9));
-
+			printf("\n\n\n\n => |%d|", get_street(ulice, 6,9));
+		*/
 	}
 
 
@@ -362,7 +398,7 @@ class Auto : public Process {
 };
 
 class Generator : public Event {  // generátor zákazníků
-	int trasy[5][MAX_POCET_ULIC_DEN];
+	int trasy_auto[5][MAX_POCET_ULIC_DEN];
 
 	public:
 		Generator(int trasy[5][MAX_POCET_ULIC_DEN]) {
@@ -370,13 +406,13 @@ class Generator : public Event {  // generátor zákazníků
 			{
 				for (int j = 0; j < MAX_POCET_ULIC_DEN; ++j)
 				{
-					trasy[i][j] = trasy[i][j];
+					trasy_auto[i][j] = trasy[i][j];
 				}
 			}
 		}
 
 	void Behavior() {               		// popis chování generátoru
-		(new Auto(trasy))->Activate();      // nový zákazník v čase Time
+		(new Auto(trasy_auto))->Activate();      // nový zákazník v čase Time
 		//Activate(Time+Exponential(1e3/150));  // interval mezi příchody
 	}
 };
@@ -387,7 +423,7 @@ class Gen_den : public Event {
 
   void Behavior() { 
   	if (DEBUG_MODE) {
-  		printf("\nDen v tydnu: %d , je vikend: %d", den_v_tydnu, je_vikend);
+  		//printf("\nDen v tydnu: %d , je vikend: %d", den_v_tydnu, je_vikend);
   	}
 	if (den_v_tydnu >=0 && den_v_tydnu<5) 
 	{
@@ -402,7 +438,7 @@ class Gen_den : public Event {
 		// pokud je nedele, tak dalsi den je pondeli => 0 
 		if (den_v_tydnu==6){
 			if (DEBUG_MODE) {
-				printf("\n----------\n ");
+				//printf("\n----------\n ");
 			}
 			den_v_tydnu=0;
 			je_vikend = 0;
@@ -436,11 +472,11 @@ int main()
 
   	// jake trasy pojede auto A
 	int trasy_A[5][MAX_POCET_ULIC_DEN] = {
-		{1,2,3,4,5,6,11,23,32,33},
-		{1,2,3,4,5,6,11,23,32,33},
-		{1,2,3,4,5,6,11,23,32,33},
-		{1,2,3,4,5,6,11,23,32,33},
-		{1,2,3,4,5,6,11,23,32,33}
+		{2,2,1,4,5,6,11,7,8,9},
+		{1,2,3,4,5,6,11,7,8,9},
+		{1,2,3,4,5,6,11,7,8,9},
+		{1,2,3,4,5,6,11,7,8,9},
+		{1,2,3,4,5,6,11,7,8,9}
 	};
 
 	// popelarsky vuz A
