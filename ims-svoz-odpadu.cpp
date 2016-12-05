@@ -175,7 +175,7 @@ class Auto : public Process {
 					// po definovani koncovejch bodu ulice musim resetovat pole aby alg fungoval spravne
 					start_end_nodes[0] = -1;
 					start_end_nodes[1] = -1;
-					//printf("\n --- jsem zde v case %f \n", Time);
+					printf("\n --- jsem zde v case %f \n", Time);
 					printf("\n --- zpracovavam ulici %d \n", trasy_auto[den_v_tydnu][zpracovano_ulic]);
 					
 					// podle dne v tydnu zpracovavam ulice
@@ -226,15 +226,6 @@ class Auto : public Process {
 					///======================== ZPRACOVANÍ ULICE ====================================================
 
 
-
-
-
-
-
-
-
-
-
 					// jsem v ulici, kde mam zacit delat  dum po domu
 					// zde bych mel zacit zpracovavat ulici dum po domu
 					// zde zpracovama jednotlive casti ulice
@@ -276,25 +267,15 @@ class Auto : public Process {
 							// oznacim ulici jako zpracovanou 
 							ulice_auto[i][7] = 1;
 							aktualni_pozice = cilova_pozice;
-	 
-							// ulici oznacim jako zpracovanou
-							
 						}
 					}
 
-
-
-					
-					// Musim nacist vsechny uzly pro danou ulici
-					// a vyhodit cilova_pozice misto
-	 				printf(" jsem v : %d a Next point: %d\n",aktualni_pozice, cilova_pozice);
 
 					///======================== ZPRACOVANÍ ULICE ====================================================
 
 					// jakmile dojedu na konec a zpracuju celou ulici, tak nastavim aktualni pozici
 					aktualni_pozice = konec_ulice;
 					zpracovano_ulic++;
-					continue;
 				}
 
 			}
