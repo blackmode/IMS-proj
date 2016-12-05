@@ -124,7 +124,6 @@ class Auto : public Process {
 	double Prichod;                 // atribut každého Auta
 	int ujeta_vzdalenost;           // atribut každého Auta
 	int trasy_auto[5][MAX_POCET_ULIC_DEN];
-	int ulice_auto[POCET_ULIC][8];	// ulice + ukazatel, zdali jsem ulici zpracoval
 	int aktualni_pozice;
 	int cilova_pozice; // cilova_pozice
 
@@ -144,14 +143,6 @@ class Auto : public Process {
 				}
 			}
 
-			// ulice pro auto -> init, melo by to byt na zacatku zivotniho cyklu
-			for (int u = 0; u < POCET_ULIC; ++u) {
-				for (int h = 0; h < 8; ++h)
-				{
-					if (h==7) ulice_auto[u][h] = 0;
-					else ulice_auto[u][h] = ulice[u][h];
-				}
-			}
 
 
 		}
@@ -164,6 +155,7 @@ class Auto : public Process {
 		//while(1) {
 
 			// ja pracovni tyden
+			// cekani na necasovanem prechodu
 			if (!je_vikend) 
 			{
 				// pokud jsem tady, mam novy seznam ulic co mam zpracovat novy den
@@ -176,33 +168,33 @@ class Auto : public Process {
 					// po definovani koncovejch bodu ulice musim resetovat pole aby alg fungoval spravne
 					start_end_nodes[0] = -1;
 					start_end_nodes[1] = -1;
-					printf("\n --- jsem zde v case %f \n", Time);
-					printf("\n --- zpracovavam ulici %d \n", trasy_auto[den_v_tydnu][zpracovano_ulic]);
+					printf("\n ============ jsem zde v case %f ====================================\n", Time);
+					printf("\n============ zpracovavam ulici %d ============\n", trasy_auto[den_v_tydnu][zpracovano_ulic]);
 					
 					// podle dne v tydnu zpracovavam ulice
 					int id_ulice = trasy_auto[den_v_tydnu][zpracovano_ulic];
 					for (int i = 0; i < POCET_ULIC; ++i)
 					{
-						if (ulice_auto[i][0] == id_ulice) 
+						if (ulice[i][0] == id_ulice) 
 						{
 							// ulozeni prvniho uzlu
 							if (start_end_nodes[0]==-1 && start_end_nodes[1]==-1) {
-								start_end_nodes[0] = ulice_auto[i][ULICE_KRIZOVATKA_X];
-								start_end_nodes[1] = ulice_auto[i][ULICE_KRIZOVATKA_Y];
+								start_end_nodes[0] = ulice[i][ULICE_KRIZOVATKA_X];
+								start_end_nodes[1] = ulice[i][ULICE_KRIZOVATKA_Y];
 							}
 							// hledam konec ulice
 							else {
-								if (start_end_nodes[0] == ulice_auto[i][ULICE_KRIZOVATKA_X]) {
-									start_end_nodes[0] = ulice_auto[i][ULICE_KRIZOVATKA_Y];
+								if (start_end_nodes[0] == ulice[i][ULICE_KRIZOVATKA_X]) {
+									start_end_nodes[0] = ulice[i][ULICE_KRIZOVATKA_Y];
 								}
-								else if (start_end_nodes[0] == ulice_auto[i][ULICE_KRIZOVATKA_Y]) {
-									start_end_nodes[0] = ulice_auto[i][ULICE_KRIZOVATKA_X];
+								else if (start_end_nodes[0] == ulice[i][ULICE_KRIZOVATKA_Y]) {
+									start_end_nodes[0] = ulice[i][ULICE_KRIZOVATKA_X];
 								}
-								else if (start_end_nodes[1] == ulice_auto[i][ULICE_KRIZOVATKA_X]) {
-									start_end_nodes[1] = ulice_auto[i][ULICE_KRIZOVATKA_Y];
+								else if (start_end_nodes[1] == ulice[i][ULICE_KRIZOVATKA_X]) {
+									start_end_nodes[1] = ulice[i][ULICE_KRIZOVATKA_Y];
 								}
 								else if (start_end_nodes[1] == ulice[i][ULICE_KRIZOVATKA_Y]) {
-									start_end_nodes[1] = ulice_auto[i][ULICE_KRIZOVATKA_X];
+									start_end_nodes[1] = ulice[i][ULICE_KRIZOVATKA_X];
 								}
 							}
 						}
@@ -241,18 +233,18 @@ class Auto : public Process {
 						
 						// zjstim zdali jsem v te ulici resp, jestli jsem na tom useku kde mam
 						// a zdali usek jeste neni zpracovan
-						if (ulice_auto[i][0] == id_ulice) 
+						if (ulice[i][0] == id_ulice) 
 						{
-							printf("\n----------------------------- Ulice: %d Usek: %d\n", ulice_auto[i][0], i);
+							printf("\n----------------------------- Ulice: %d Usek: %d\n", ulice[i][0], i);
 
-							int end_point = get_street_by_endpoint(ulice_auto, id_ulice, aktualni_pozice, zpracovane_useky, &zpracovane_useky_index);
-							cilova_pozice = get_next_point(ulice_auto,id_ulice,aktualni_pozice, zpracovane_krizovatky,&zpracovane_krizovatky_index);
+							int end_point = get_street_by_endpoint(ulice, id_ulice, aktualni_pozice, zpracovane_useky, &zpracovane_useky_index);
+							cilova_pozice = get_next_point(ulice,id_ulice,aktualni_pozice, zpracovane_krizovatky,&zpracovane_krizovatky_index);
 
-							printf(" jsem v : %d a Next point: %d Usek: co tam byl: %d index co tam ma byt: %d ep: %d\n",aktualni_pozice, cilova_pozice,i,get_street(ulice_auto,aktualni_pozice,cilova_pozice),end_point);
+							printf(" jsem v : %d a Next point: %d Usek: co tam byl: %d index co tam ma byt: %d ep: %d\n",aktualni_pozice, cilova_pozice,i,get_street(ulice,aktualni_pozice,cilova_pozice),end_point);
 
-							int pocet_domu_ulice = ulice_auto[end_point][ULICE_POCET_DOMU];
-							int delka_useku_ulice = ulice_auto[end_point][ULICE_DELKA];
-							int typ_zastavby = ulice_auto[end_point][ULICE_TYP_ZASTAVBY]; // pocet popelnice
+							int pocet_domu_ulice = ulice[end_point][ULICE_POCET_DOMU];
+							int delka_useku_ulice = ulice[end_point][ULICE_DELKA];
+							int typ_zastavby = ulice[end_point][ULICE_TYP_ZASTAVBY]; // pocet popelnice
 
 							// musim overit, jestli auto neni plne
 							// pokud ne, tak zpracovavam
@@ -274,7 +266,6 @@ class Auto : public Process {
 
 
 							// oznacim ulici jako zpracovanou 
-							ulice_auto[i][7] = 1;
 							aktualni_pozice = cilova_pozice;
 						}
 					}
@@ -502,7 +493,7 @@ class Auto : public Process {
   }
 
   	// podle zadane casti ulice zjistim jeji ID
-	int get_street(int streets[][8], int src, int dest) 
+	int get_street(int streets[][7], int src, int dest) 
 	{
 		for (int i = 0; i < POCET_ULIC; ++i)
 		{
@@ -513,7 +504,7 @@ class Auto : public Process {
 		return -1;
 	}
   	// vraci cast ulice, ktera navazuje na uzel nzadanej pramaterem: begin_end_point
-	int get_street_by_endpoint(int streets[][8], int id_street, int begin_end_point, int processed[MAX_POCET_KRIZOVATEK_ULICE], int* processed_counter) 
+	int get_street_by_endpoint(int streets[][7], int id_street, int begin_end_point, int processed[MAX_POCET_KRIZOVATEK_ULICE], int* processed_counter) 
 	{
 		for (int i = 0; i < POCET_ULIC; ++i)
 		{
@@ -539,7 +530,7 @@ class Auto : public Process {
 
 
   	// vraci dalsi uzel ulice id_street, kterej je spojenej s begin_end_point uzlem
-	int get_next_point(int streets[][8], int id_street, int begin_end_point, int processed[10], int* processed_counter) 
+	int get_next_point(int streets[][7], int id_street, int begin_end_point, int processed[10], int* processed_counter) 
 	{
 		for (int i = 0; i < POCET_ULIC; ++i)
 		{
