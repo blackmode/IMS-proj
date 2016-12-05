@@ -261,6 +261,8 @@ class Auto : public Process {
 							{
 								int doba_prijezdu_k_domu = (delka_useku_ulice/pocet_domu_ulice)/PRUMERNA_RYCHLOST_PRESUNU_MEZI_DOMY;
 								Wait(doba_prijezdu_k_domu);
+								ujeta_vzdalenost+=(delka_useku_ulice/pocet_domu_ulice); // auto se pohlo
+
 								// zpracovani popelnice  v prumeru 30s/popelnice
 								Wait(DOBRA_ZPRACOVANI_POPELNICE*typ_zastavby);
 
