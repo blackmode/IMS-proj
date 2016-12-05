@@ -24,3 +24,9 @@ github:
 	git pull origin master
 	git commit -am "update"
 	git push origin master
+
+again:
+	rm -f $(PROGRAM)
+	rm -f *.o
+	make all
+	./$(PROGRAM)

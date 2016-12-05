@@ -18,6 +18,9 @@
 // počet křižovatek
 #define POCET_KRIZOVATEK 11
 
+#define PRUMERNA_RYCHLOST_PRESUNU_MEZI_ULICEMI 11 // m/s
+#define PRUMERNA_RYCHLOST_PRESUNU_MEZI_DOMY 3 // m/s
+
 // CASOVE KONSTANTY
 const int MINUTA = 60; // SEKUND
 const int HODINA = MINUTA*60; // hodina
@@ -169,10 +172,53 @@ class Auto : public Process {
 
 					}
 				}
+				// zvolim si jako zacatek prvni parametr -> tady bych modl dat i nahodny vyber
+				// jakoze ridic si voli trasu
+				int dest = start_end_nodes[0];
 
-				p(start_end_nodes, 2);
-				double r = Random()*2;
-				printf("%f\n",r);
+				// presunu se na misto urceni, kde zacu zpracovavat ulici
+				// src je zde porad to nase depo!
+				presun(src,dest,&ujeta_vzdalenost);
+
+				// jsem v ulici, kde mam zacit delat  dum po domu
+				// zde bych mel zacit zpracovavat ulici dum po domu
+				for (int i = 0; i < POCET_ULIC; ++i)
+				{
+					// zjstim zdali jsem v te ulici resp, jestli jsem na tom useku kde mam
+					if (ulice[i][0] == id_ulice) 
+					{
+						if (get_street_by_endpoint(ulice,id_ulice,dest )!=-1) 
+						{
+							int id_zpracovavane_ulice = get_street_by_endpoint(ulice,id_ulice,dest );
+							int pocet_domu_ulice = ulice[id_zpracovavane_ulice][ULICE_POCET_DOMU];
+							int delka_useku_ulice = ulice[id_zpracovavane_ulice][ULICE_DELKA];
+							int typ_zastavby = ulice[id_zpracovavane_ulice][ULICE_TYP_ZASTAVBY]; // pocet popelnice
+
+							// musim overit, jestli auto neni plne
+							// pokud ne, tak zpracovavam
+							int i_zprac = pocet_domu_ulice;
+							while (i_zprac>0) 
+							{
+								int doba_prijezdu_k_domu = (delka_useku_ulice/pocet_domu_ulice)/PRUMERNA_RYCHLOST_PRESUNU_MEZI_DOMY;
+								Wait(doba_prijezdu_k_domu);
+								// zpracovani popelnice  v prumeru 30s/popelnice
+								Wait(45*typ_zastavby);
+								i_zprac--;
+							}
+							// usek mam hotov, posunu se dal
+							src = dest; // jsem v src
+							// jedu do dest
+							dest = get_next_point(ulice,id_ulice,dest );
+							printf("domu: %d\n", pocet_domu_ulice);
+							printf("Jedu do: %d\n", dest);
+							printf("Jedu do: %d\n", dest);
+						}
+					}
+				}
+
+
+
+				
 				break;
 				// Musim nacist vsechny uzly pro danou ulici
 				// a vyhodit dest misto
@@ -196,6 +242,16 @@ class Auto : public Process {
 			printf("\n\n\n\n => |%d|", get_street(ulice, 6,9));
 		*/
 	}
+
+  	// presun mezi krizovatkami
+	int presun(int src, int dest, int* ujeta_vzdalenost) 
+	{
+		int vzdalenost = dijkstra(graph, src,dest);
+		Wait(vzdalenost/PRUMERNA_RYCHLOST_PRESUNU_MEZI_ULICEMI);
+		*ujeta_vzdalenost = *ujeta_vzdalenost + vzdalenost;
+		return vzdalenost;
+	}
+
 
 
   // debug print: vypise pole int o urcite velikosti
@@ -393,7 +449,31 @@ class Auto : public Process {
 		}
 		return -1;
 	}
+  	// vraci cast ulice, ktera navazuje na uzel nzadanej pramaterem: begin_end_point
+	int get_street_by_endpoint(int streets[][7], int id_street, int begin_end_point) 
+	{
+		for (int i = 0; i < POCET_ULIC; ++i)
+		{
+			if (streets[i][0]==id_street) 
+				if ( (streets[i][ULICE_KRIZOVATKA_X] == begin_end_point || streets[i][ULICE_KRIZOVATKA_Y] == begin_end_point)) 
+					return i;
+		}
+		return -1;
+	}
+  	// vraci dalsi uzel ulice id_street, kterej je spojenej s begin_end_point uzlem
+	int get_next_point(int streets[][7], int id_street, int begin_end_point) 
+	{
+		for (int i = 0; i < POCET_ULIC; ++i)
+		{
+			if (streets[i][0]==id_street) 
+				if ( (streets[i][ULICE_KRIZOVATKA_X] == begin_end_point))
+					return streets[i][ULICE_KRIZOVATKA_Y];
 
+				if ((streets[i][ULICE_KRIZOVATKA_Y] == begin_end_point)) 
+					return streets[i][ULICE_KRIZOVATKA_X];
+		}
+		return -1;
+	}
 
 };
 
@@ -472,7 +552,7 @@ int main()
 
   	// jake trasy pojede auto A
 	int trasy_A[5][MAX_POCET_ULIC_DEN] = {
-		{2,2,1,4,5,6,11,7,8,9},
+		{3,2,1,4,5,6,11,7,8,9},
 		{1,2,3,4,5,6,11,7,8,9},
 		{1,2,3,4,5,6,11,7,8,9},
 		{1,2,3,4,5,6,11,7,8,9},
