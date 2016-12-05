@@ -171,8 +171,8 @@ class Auto : public Process {
 				}
 
 				p(start_end_nodes, 2);
-				int r = Random()*2;
-				printf("%d\n", start_end_nodes[r]);
+				double r = Random()*2;
+				printf("%f\n",r);
 				break;
 				// Musim nacist vsechny uzly pro danou ulici
 				// a vyhodit dest misto
