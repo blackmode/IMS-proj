@@ -26,6 +26,7 @@
 
 // doba zpracovani popelnice
 #define DOBRA_ZPRACOVANI_POPELNICE 30 // s
+#define DOBA_VYKLAPENI_ODPADU 600 // s
 
 // doba zpracovani popelnice
 #define MAX_KAPACITA_ODPADU_V_AUTE 11000 // kg => 11 tun
@@ -143,7 +144,9 @@ class Auto : public Process {
 	int trasy_auto[5][MAX_POCET_ULIC_DEN];
 	int aktualni_pozice;
 	int cilova_pozice; // cilova_pozice
-	int kapacita_vozu; // kolik kg odpadu popelarsky vuz uveze
+    int mnozstvi_odpadu_v_aute; // kolik kg odpadu popelarsky vuz uveze
+    int seznam_ulic_hotov; //  
+    int seznam_ulic_pro_dany_den; //  
 
 	public: 
 		Auto (int trasy[5][MAX_POCET_ULIC_DEN]) {
@@ -151,7 +154,9 @@ class Auto : public Process {
 			ujeta_vzdalenost = 0;
 			aktualni_pozice = DEPO;
 			cilova_pozice = -1;
-			kapacita_vozu = 0; // kdyz vyjizdi z depa tak je prazdny
+			mnozstvi_odpadu_v_aute = 0; // kdyz vyjizdi z depa tak je prazdny
+            seznam_ulic_hotov = 0;
+            seznam_ulic_pro_dany_den = -1;
 
 			// trasy ke zpracovani pro cely tyden
 			for (int i = 0; i < 5; ++i){
@@ -167,19 +172,22 @@ class Auto : public Process {
 		
 
 		while(1) {
+            zacatek_prace:
 			Prichod = Time;               // čas vyjeti auta z depa
 
 			// ja pracovni tyden
-			// cekani na necasovanem prechodu
+			// overeni stavu , pokud je pracovni den a zaroven jeste nema auto hotov svuj prideleny seznam ulic
 			if (!je_vikend) 
 			{
 				// pokud jsem tady, mam novy seznam ulic co mam zpracovat novy den
 				int zpracovano_ulic = 0;
 				int start_end_nodes[2] = {-1,-1};	// urcuje zacatek a konec ulice
+                seznam_ulic_pro_dany_den = den_v_tydnu; // dostal jsem seznam ulic, ktere mam dany den zvladnout
 
 				// zpracovani ulic pro dany den
 				while(zpracovano_ulic < MAX_POCET_ULIC_DEN and trasy_auto[den_v_tydnu][zpracovano_ulic]!=-1) 
 				{
+
 					// po definovani koncovejch bodu ulice musim resetovat pole aby alg fungoval spravne
 					start_end_nodes[0] = -1;
 					start_end_nodes[1] = -1;
@@ -267,7 +275,7 @@ class Auto : public Process {
 
 							// pokud je v aute misto, tak zacnu zpracovavat dum po domu
 							zpracovavava_ulice:
-							if (kapacita_vozu<MAX_KAPACITA_ODPADU_V_AUTE) 
+							if (mnozstvi_odpadu_v_aute<MAX_KAPACITA_ODPADU_V_AUTE) 
 							{
 								
 								while (i_zprac>0) 
@@ -278,7 +286,7 @@ class Auto : public Process {
 
 									// zpracovani popelnice  v prumeru 30s/popelnice
 									Wait(DOBRA_ZPRACOVANI_POPELNICE*typ_zastavby);
-									kapacita_vozu+=  ((typ_zastavby+1) * 500); // typ zastavby zastupuje pocet popelnic pro danou zastavbu * 50kg na kazdou popelnici
+									mnozstvi_odpadu_v_aute+=  ((typ_zastavby+1) * 500); // typ zastavby zastupuje pocet popelnic pro danou zastavbu * 50kg na kazdou popelnici
 
 									// potreba aktualizovat pocet kg odpadu v aute
 									// [ sem doplnit pocet odpadu v aute ]
@@ -287,17 +295,17 @@ class Auto : public Process {
 								}
 							}
 							else {
-								Odpad(kapacita_vozu);
-								if (DEBUG_MODE) printf("\nVyvazim odpad: %d\n",kapacita_vozu);
+								Odpad(mnozstvi_odpadu_v_aute);
+								if (DEBUG_MODE) printf("\nVyvazim odpad: %d\n",mnozstvi_odpadu_v_aute);
 								// musim jet s odpadem na skladku
 								presun(aktualni_pozice,SKLADKA,&ujeta_vzdalenost);
 								// dojel jsem na skladku
 								Seize(Skladka);
-								Wait(10*MINUTA); // VYKLAPIM OBSAH
+								Wait(Exponential(DOBA_VYKLAPENI_ODPADU)); // VYKLAPIM OBSAH
 								Release(Skladka);
 
-								odpad_ke_zpracovani+=kapacita_vozu;
-								kapacita_vozu = 0;
+								odpad_ke_zpracovani+=mnozstvi_odpadu_v_aute;
+								mnozstvi_odpadu_v_aute = 0;
 
 								//vracim se ze skladky zpet do te ulice, kterou jsem mel zpracovavat
 								presun(SKLADKA,aktualni_pozice,&ujeta_vzdalenost);
@@ -315,21 +323,60 @@ class Auto : public Process {
 
 
 					///======================== ZPRACOVANÍ ULICE ====================================================
+                    printf("\rULICE %d JE HOTOVA,KRIZOVATKA: %d den: %d cas Zpracovani: %f h ujeta_vzdalenost:  %d m cas: %f\n", trasy_auto[den_v_tydnu][zpracovano_ulic], aktualni_pozice, den_v_tydnu, (Time-Prichod)/3600, ujeta_vzdalenost,Time/3600 );
 
-					// jakmile dojedu na konec a zpracuju celou ulici, tak nastavim aktualni pozici
+        			// jakmile dojedu na konec a zpracuju celou ulici, tak nastavim aktualni pozici
 					aktualni_pozice = konec_ulice;
 					zpracovano_ulic++;
 				}
+
 				// V TOMTO miste mam zpracovany ulice
 				// mel bych se vratit zpetdo depa
-				if (DEBUG_MODE) printf("\nOBLAST JE HOTOVA, SKONCIL JSEM NA KRIZOVATCE: %d\n", aktualni_pozice);
-				
+               
+                printf("\rOBLAST JE HOTOVA, jsem na KRIZOVATCE: %d aktualni den: %d cas ztraveny Zpracovanim: %f h ujeta_vzdalenost:  %d m\n", aktualni_pozice, den_v_tydnu, (Time-Prichod)/3600, ujeta_vzdalenost );
+                //ujeta_vzdalenost = 0;
+                seznam_ulic_hotov = 1;
+                printf("\r--------------------------------------------------------------------------------\n");
+
+                // jsem ve stavu, kdy mame hotovo a musime jet vyklopit odpad a pak jet do depa
+                // musim jet s odpadem na skladku
+                presun(aktualni_pozice,SKLADKA,&ujeta_vzdalenost);
+                // dojel jsem na skladku a potrebuju jet dovnitr abych mohl vyklopit obsah
+                Seize(Skladka);
+                Wait(DOBA_VYKLAPENI_ODPADU*MINUTA); // VYKLAPIM OBSAH
+                Release(Skladka);
+
+                odpad_ke_zpracovani+=mnozstvi_odpadu_v_aute;
+                mnozstvi_odpadu_v_aute = 0;
+
+                // jedu zpet do depa
+                presun(SKLADKA,DEPO,&ujeta_vzdalenost);
+                aktualni_pozice = DEPO;
+
+                // POCKAM DO dalsiho dne
+                //Wait(DEN-(Time-Prichod));
+                seznam_ulic_hotov = 0;
+                                printf("jedu do DEPA\n");
+
+                // proces je v depu i po cely vikend!! nikam nejede, proto ho nevytahhuju o vikendu ź fronty, ale necham ho cekat
+                Q1.Insert(this);
+                Passivate();
+                printf("Je cas vyjet!!\n");
+                //goto zacatek_prace;
+                //if (seznam_ulic_pro_dany_den != den_v_tydnu)
 
 			}
 			else {
+
+                // zacal vikend, pockam 
+                //Wait(2*DEN);
+                // cekam v depu,
+                WaitUntil(je_vikend==0)
+                
 				// nevim jeste, jestli to vyuziju
-				// Q1.Insert(this);
-				// Passivate();
+				//Q1.Insert(this);
+				//Passivate();
+                //goto zacatek_prace;
 			}
 			Tabulka(Time-Prichod); // wtf??
 		} // end while
@@ -345,6 +392,12 @@ class Auto : public Process {
 		return vzdalenost;
 	}
 
+    int nasledujici_den(int aktualni_den) {
+        if (aktualni_den>=0 && aktualni_den<6) 
+           return aktualni_den + 1;
+        else if (aktualni_den==6)
+            return 0;
+    }
 
 
   // debug print: vypise pole int o urcite velikosti
@@ -613,9 +666,12 @@ class Generator : public Event {  // generátor zákazníků
 
 	void Behavior() {               		// popis chování generátoru
 		(new Auto(trasy_auto))->Activate();      // nový zákazník v čase Time
+        //Activate(Time+DEN);
 	}
 };
 
+
+ 
 
 // stridani dne v tydnu
 class Gen_den : public Event { 
@@ -627,11 +683,11 @@ class Gen_den : public Event {
 	if (den_v_tydnu >=0 && den_v_tydnu<5) 
 	{
 		// zatim nevim, jestli to vyuziju
-		if (!Q1.Empty()) {
+		while (!Q1.Empty()) {
 			printf("FRonta nebyla praznda!\n");
 			Process *aut = (Process *)Q1.GetFirst();
 			aut->Activate();
-		}
+		}// else printf("FRonta BYLaaaa praznda!\n");
 
 		den_v_tydnu++;
 		if (den_v_tydnu==5) {
@@ -671,11 +727,11 @@ int main()
 	// POZN: pokud je pole vetsi nez datovej vstup, tak zbytek pole dopisem vzdycky  hodnotou -1 !!! 
 
   Print("***** MODEL1 *****\n");
-  Init(0,2*DEN);              // inicializace experimentu
+  Init(0,5*TYDEN);              // inicializace experimentu
 
   // stridani dnu v tydnu
   (new Gen_den)->Activate(); 
-
+ 
   	// jake trasy pojede auto A
 	int trasy_A[5][MAX_POCET_ULIC_DEN] = {
 		{3,2,1,4,5,6,11,7,10,9},
@@ -687,11 +743,9 @@ int main()
 
 	// popelarsky vuz A
   (new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
-  (new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
+  //(new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
   Run();                     // simulace
-  Skladka.Output();              // tisk výsledků
-  Tabulka.Output();
-  Odpad.Output();
+ Tabulka.Output();
 
   return 0;
 }
