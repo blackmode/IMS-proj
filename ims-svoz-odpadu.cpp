@@ -173,7 +173,7 @@ class Produkce_odpadu: public Process {
         {
             produkce_odpadu[i][3] +=  produkce_odpadu[i][1] * PRUMER_MNOZSTVI_ODPADU_CLOVEK;
         }
-        printf("\n PRODUKCE BYTOVKY: %f\n", (double)produkce_odpadu[0][3]);
+        //printf("\n PRODUKCE BYTOVKY: %f\n", (double)produkce_odpadu[0][3]);
     }
 };
 
@@ -399,20 +399,20 @@ class Auto : public Process {
                 // POCKAM DO dalsiho dne
                 //Wait(DEN-(Time-Prichod));
                 seznam_ulic_hotov = 0;
-                printf("jedu do DEPA cas: %f den: %d\n", Time/3600, den_v_tydnu);
+                //printf("jedu do DEPA cas: %f den: %d\n", Time/3600, den_v_tydnu);
 
                 // proces je v depu i po cely vikend!! nikam nejede, proto ho nevytahhuju o vikendu ź fronty, ale necham ho cekat
                 if (den_v_tydnu!=5 && den_v_tydnu!=6) {
                     // proces byl znovu aktivovan ALE ted zahajim cekani, presunu se z parkoviste do garaze, kde pockam, dokud nezacne pracovni tyden
                     Q1.Insert(this);
                     Passivate();
-                    printf("Jedu z depaa:: Je cas vyjet!!\n");
+                    //printf("Jedu z depaa:: Je cas vyjet!!\n");
                 }
 
                 //goto zacatek_prace;
 			}
 			else {
-                 printf("GARAZ: cas: %f den: %d\n", Time/3600, den_v_tydnu);
+                 //printf("GARAZ: cas: %f den: %d\n", Time/3600, den_v_tydnu);
                 // zacal vikend, pockam 
                 //Wait(2*DEN);
                 // cekam v depu,
@@ -489,7 +489,7 @@ class Auto : public Process {
 			// DEBUG
 			if (DEBUG_MODE)
 				if (c>200) {
-					printf("Doslo k zacykleni!!!\n");
+					//printf("Doslo k zacykleni!!!\n");
 					break;
 				}
 		}
@@ -723,18 +723,13 @@ class Gen_den : public Event {
   	}
 	if (den_v_tydnu >=0 && den_v_tydnu<5) 
 	{
-
-
 		den_v_tydnu++;
 		if (den_v_tydnu==5) {
 			je_vikend = 1;
 		}
 
-
-
         // zatim nevim, jestli to vyuziju
         while (!Q1.Empty()) {
-            printf("FRonta nebyla praznda!\n");
             Process *aut = (Process *)Q1.GetFirst();
             aut->Activate();
         }// else printf("FRonta BYLaaaa praznda!\n");
@@ -772,7 +767,7 @@ int main()
 {
 	// POZN: pokud je pole vetsi nez datovej vstup, tak zbytek pole dopisem vzdycky  hodnotou -1 !!! 
 
-  Print("***** MODEL1 *****\n");
+  Print("***** MODEL *****\n");
   Init(0,1*TYDEN);              // inicializace experimentu
 
   // stridani dnu v tydnu
