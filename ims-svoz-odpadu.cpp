@@ -205,7 +205,6 @@ class Auto : public Process {
 				// zpracovani ulic pro dany den
 				while(zpracovano_ulic < MAX_POCET_ULIC_DEN and trasy_auto[den_v_tydnu][zpracovano_ulic]!=-1) 
 				{
-
 					// po definovani koncovejch bodu ulice musim resetovat pole aby alg fungoval spravne
 					start_end_nodes[0] = -1;
 					start_end_nodes[1] = -1;
@@ -416,14 +415,6 @@ class Auto : public Process {
 		return vzdalenost;
 	}
 
-    int nasledujici_den(int aktualni_den) {
-        if (aktualni_den>=0 && aktualni_den<6) 
-           return aktualni_den + 1;
-        else if (aktualni_den==6)
-            return 0;
-    }
-
-
   // debug print: vypise pole int o urcite velikosti
   void p(int pole[], int velikost) {
 	  printf("\n");
@@ -433,7 +424,6 @@ class Auto : public Process {
 	  }
 	  printf("\n");
   }
-
 
   // A utility function to find the vertex with minimum distance
   // value, from the set of vertices not yet included in shortest
