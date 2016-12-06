@@ -6,7 +6,7 @@
 #include <iostream>
 #include <algorithm>
 
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 #define MAX_POCET_KRIZOVATEK_ULICE 10
 
 
@@ -52,6 +52,7 @@ int den_v_tydnu = -1;
 // je vykend ci nikoliv
 int je_vikend = 0;
 
+int odpad_ke_zpracovani = 0;
 
 /** 
 * modelovana oblast => graf krizovatek 
@@ -117,7 +118,7 @@ int nejkratsi_cesta[POCET_KRIZOVATEK] = {0,0,0,0,0,0,0,0,0};
 
 //  deklarace  globálních  objektů
 Facility  Skladka("Skládka odpadu");
-Histogram Tabulka("Tabulka",0,50,10);
+Histogram Tabulka("Tabulka",0,1,15);
 
 
 
@@ -128,7 +129,9 @@ public:
 	}
 
 	void Behavior () {
+		while(1) {
 
+		}
 	}
 };
 
@@ -159,10 +162,10 @@ class Auto : public Process {
 
 
 	void Behavior() {                 // popis chování auta
-		Prichod = Time;               // čas vyjeti auta z depa
+		
 
-
-		//while(1) {
+		while(1) {
+			Prichod = Time;               // čas vyjeti auta z depa
 
 			// ja pracovni tyden
 			// cekani na necasovanem prechodu
@@ -178,8 +181,8 @@ class Auto : public Process {
 					// po definovani koncovejch bodu ulice musim resetovat pole aby alg fungoval spravne
 					start_end_nodes[0] = -1;
 					start_end_nodes[1] = -1;
-					printf("\n ============ jsem zde v case %f ====================================\n", Time);
-					printf("\n============ zpracovavam ulici %d ============\n", trasy_auto[den_v_tydnu][zpracovano_ulic]);
+					if (DEBUG_MODE) printf("\n ============ jsem zde v case %f ====================================\n", Time);
+					if (DEBUG_MODE) printf("\n============ zpracovavam ulici %d ============\n", trasy_auto[den_v_tydnu][zpracovano_ulic]);
 					
 					// podle dne v tydnu zpracovavam ulice
 					int id_ulice = trasy_auto[den_v_tydnu][zpracovano_ulic];
@@ -209,8 +212,8 @@ class Auto : public Process {
 							}
 						}
 					}
-					p(start_end_nodes,2);
-					printf("\n 1:Moje aktualni pozice: %d \n", aktualni_pozice);
+					if (DEBUG_MODE) p(start_end_nodes,2);
+					if (DEBUG_MODE) printf("\n 1:Moje aktualni pozice: %d \n", aktualni_pozice);
 
 					// zvolim si jako zacatek prvni parametr -> tady bych modl dat i nahodny vyber
 					// jakoze ridic si voli trasu
@@ -237,7 +240,7 @@ class Auto : public Process {
 					int zpracovane_krizovatky[MAX_POCET_KRIZOVATEK_ULICE] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 					int zpracovane_useky_index = 0;
 					int zpracovane_krizovatky_index = 0;
-					printf("\nJsem aktualne v:  %d\n\n", aktualni_pozice);
+					if (DEBUG_MODE) printf("\nJsem aktualne v:  %d\n\n", aktualni_pozice);
 					for (int i = 0; i < POCET_ULIC; ++i)
 					{
 						
@@ -245,12 +248,12 @@ class Auto : public Process {
 						// a zdali usek jeste neni zpracovan
 						if (ulice[i][0] == id_ulice) 
 						{
-							printf("\n----------------------------- Ulice: %d Usek: %d\n", ulice[i][0], i);
+							if (DEBUG_MODE) printf("\n----------------------------- Ulice: %d Usek: %d\n", ulice[i][0], i);
 
 							int end_point = get_street_by_endpoint(ulice, id_ulice, aktualni_pozice, zpracovane_useky, &zpracovane_useky_index);
 							cilova_pozice = get_next_point(ulice,id_ulice,aktualni_pozice, zpracovane_krizovatky,&zpracovane_krizovatky_index);
 
-							printf(" jsem v : %d a Next point: %d Usek: co tam byl: %d index co tam ma byt: %d ep: %d\n",aktualni_pozice, cilova_pozice,i,get_street(ulice,aktualni_pozice,cilova_pozice),end_point);
+							if (DEBUG_MODE) printf(" jsem v : %d a Next point: %d Usek: co tam byl: %d index co tam ma byt: %d ep: %d\n",aktualni_pozice, cilova_pozice,i,get_street(ulice,aktualni_pozice,cilova_pozice),end_point);
 
 							int pocet_domu_ulice = ulice[end_point][ULICE_POCET_DOMU];
 							int delka_useku_ulice = ulice[end_point][ULICE_DELKA];
@@ -259,20 +262,47 @@ class Auto : public Process {
 							// musim overit, jestli auto neni plne
 							// pokud ne, tak zpracovavam
 							int i_zprac = pocet_domu_ulice;
-							while (i_zprac>0) 
+
+							// pokud je v aute misto, tak zacnu zpracovavat dum po domu
+							zpracovavava_ulice:
+							if (kapacita_vozu<MAX_KAPACITA_ODPADU_V_AUTE) 
 							{
-								int doba_prijezdu_k_domu = (delka_useku_ulice/pocet_domu_ulice)/PRUMERNA_RYCHLOST_PRESUNU_MEZI_DOMY;
-								Wait(doba_prijezdu_k_domu);
-								ujeta_vzdalenost+=(delka_useku_ulice/pocet_domu_ulice); // auto se pohlo
+								
+								while (i_zprac>0) 
+								{
+									int doba_prijezdu_k_domu = (delka_useku_ulice/pocet_domu_ulice)/PRUMERNA_RYCHLOST_PRESUNU_MEZI_DOMY;
+									Wait(doba_prijezdu_k_domu);
+									ujeta_vzdalenost+=(delka_useku_ulice/pocet_domu_ulice); // auto se pohlo
 
-								// zpracovani popelnice  v prumeru 30s/popelnice
-								Wait(DOBRA_ZPRACOVANI_POPELNICE*typ_zastavby);
+									// zpracovani popelnice  v prumeru 30s/popelnice
+									Wait(DOBRA_ZPRACOVANI_POPELNICE*typ_zastavby);
+									kapacita_vozu+=  ((typ_zastavby+1) * 500); // typ zastavby zastupuje pocet popelnic pro danou zastavbu * 50kg na kazdou popelnici
 
-								// potreba aktualizovat pocet kg odpadu v aute
-								// [ sem doplnit pocet odpadu v aute ]
-								// Pokud by presahla, tak musime odpad vyvest
-								i_zprac--;
+									// potreba aktualizovat pocet kg odpadu v aute
+									// [ sem doplnit pocet odpadu v aute ]
+									// Pokud by presahla, tak musime odpad vyvest
+									i_zprac--;
+								}
 							}
+							else {
+								if (DEBUG_MODE) printf("\nVyvazim odpad: %d\n",kapacita_vozu);
+								// musim jet s odpadem na skladku
+								presun(aktualni_pozice,SKLADKA,&ujeta_vzdalenost);
+								// dojel jsem na skladku
+								Seize(Skladka);
+								Wait(10*MINUTA); // VYKLAPIM OBSAH
+								Release(Skladka);
+
+								odpad_ke_zpracovani+=kapacita_vozu;
+								kapacita_vozu = 0;
+
+								//vracim se ze skladky zpet do te ulice, kterou jsem mel zpracovavat
+								presun(SKLADKA,aktualni_pozice,&ujeta_vzdalenost);
+
+								goto zpracovavava_ulice;
+							}
+
+
 
 
 							// oznacim ulici jako zpracovanou 
@@ -289,25 +319,13 @@ class Auto : public Process {
 				}
 				// V TOMTO miste mam zpracovany ulice
 				// mel bych se vratit zpetdo depa
-				printf("\nOBLAST JE HOTOVA, SKONCIL JSEM NA KRIZOVATCE: %d\n", aktualni_pozice);
+				if (DEBUG_MODE) printf("\nOBLAST JE HOTOVA, SKONCIL JSEM NA KRIZOVATCE: %d\n", aktualni_pozice);
+				
 
 			}
-		//} // end while
+			Tabulka(Time-Prichod); // wtf??
+		} // end while
 
-
-		/*	Wait(10);                     // obsluha V
-		
-			dijkstra(graph, 8,5);
-			p(nejkratsi_cesta, POCET_KRIZOVATEK);
-
-			dijkstra(graph, 0,5);
-			p(nejkratsi_cesta, POCET_KRIZOVATEK);
-
-			dijkstra(graph, 3,6);
-			p(nejkratsi_cesta, POCET_KRIZOVATEK);
-
-			printf("\n\n\n\n => |%d|", get_street(ulice, 6,9));
-		*/
 	}
 
   	// presun mezi krizovatkami
@@ -587,7 +605,6 @@ class Generator : public Event {  // generátor zákazníků
 
 	void Behavior() {               		// popis chování generátoru
 		(new Auto(trasy_auto))->Activate();      // nový zákazník v čase Time
-		//Activate(Time+Exponential(1e3/150));  // interval mezi příchody
 	}
 };
 
@@ -639,7 +656,7 @@ int main()
 	// POZN: pokud je pole vetsi nez datovej vstup, tak zbytek pole dopisem vzdycky  hodnotou -1 !!! 
 
   Print("***** MODEL1 *****\n");
-  Init(0,5*TYDEN);              // inicializace experimentu
+  Init(0,24*HODINA);              // inicializace experimentu
 
   // stridani dnu v tydnu
   (new Gen_den)->Activate(); 
@@ -656,8 +673,8 @@ int main()
 	// popelarsky vuz A
   (new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
   Run();                     // simulace
-  //Skladka.Output();              // tisk výsledků
-  //Tabulka.Output();
+  Skladka.Output();              // tisk výsledků
+  Tabulka.Output();
 
   return 0;
 }
