@@ -27,7 +27,8 @@
 // doba zpracovani popelnice
 #define DOBRA_ZPRACOVANI_POPELNICE 30 // s
 
-
+// doba zpracovani popelnice
+#define MAX_KAPACITA_ODPADU_V_AUTE 11000 // kg => 11 tun
 
 // CASOVE KONSTANTY
 const int MINUTA = 60; // SEKUND
@@ -120,12 +121,24 @@ Histogram Tabulka("Tabulka",0,50,10);
 
 
 
+class Buldozer: public Process {
+public: 
+	Buldozer() {
+
+	}
+
+	void Behavior () {
+
+	}
+};
+
 class Auto : public Process {
 	double Prichod;                 // atribut každého Auta
 	int ujeta_vzdalenost;           // atribut každého Auta
 	int trasy_auto[5][MAX_POCET_ULIC_DEN];
 	int aktualni_pozice;
 	int cilova_pozice; // cilova_pozice
+	int kapacita_vozu; // kolik kg odpadu popelarsky vuz uveze
 
 	public: 
 		Auto (int trasy[5][MAX_POCET_ULIC_DEN]) {
@@ -133,7 +146,7 @@ class Auto : public Process {
 			ujeta_vzdalenost = 0;
 			aktualni_pozice = DEPO;
 			cilova_pozice = -1;
-
+			kapacita_vozu = 0; // kdyz vyjizdi z depa tak je prazdny
 
 			// trasy ke zpracovani pro cely tyden
 			for (int i = 0; i < 5; ++i){
@@ -142,9 +155,6 @@ class Auto : public Process {
 					trasy_auto[i][j] = trasy[i][j];
 				}
 			}
-
-
-
 		}
 
 
@@ -277,6 +287,9 @@ class Auto : public Process {
 					aktualni_pozice = konec_ulice;
 					zpracovano_ulic++;
 				}
+				// V TOMTO miste mam zpracovany ulice
+				// mel bych se vratit zpetdo depa
+				printf("\nOBLAST JE HOTOVA, SKONCIL JSEM NA KRIZOVATCE: %d\n", aktualni_pozice);
 
 			}
 		//} // end while

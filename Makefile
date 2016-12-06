@@ -20,6 +20,9 @@ test:
 memtest:
 	valgrind --leak-check=full -v --show-leak-kinds=all ./$(PROGRAM)
 
+zip:
+	zip 06_xsluns01_xpokor63.zip $(PROGRAM).cpp Makefile dokumentace.pdf
+
 github:
 	git pull origin master
 	git commit -am "update"
