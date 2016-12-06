@@ -47,7 +47,7 @@ const int ULICE_TYP_ZASTAVBY = 4;	// bytovka/rodinny dum/panelak apod.
 const int ULICE_KRIZOVATKA_X = 5;	// kazda ulice ci jeji cast je definovana krizovatkou/uzlem X 
 const int ULICE_KRIZOVATKA_Y = 6;	// kazda ulice ci jeji cast je definovana krizovatkou/uzlem Y
 
-Queue Q1;
+Queue Q1; // depo
 
 // jakej je zrovne den v tydnu
 int den_v_tydnu = -1;
@@ -361,13 +361,11 @@ class Auto : public Process {
                 // proces je v depu i po cely vikend!! nikam nejede, proto ho nevytahhuju o vikendu ź fronty, ale necham ho cekat
                 Q1.Insert(this);
                 Passivate();
+
                 printf("Je cas vyjet!!\n");
                 //goto zacatek_prace;
-                //if (seznam_ulic_pro_dany_den != den_v_tydnu)
-
 			}
 			else {
-
                 // zacal vikend, pockam 
                 //Wait(2*DEN);
                 // cekam v depu,
