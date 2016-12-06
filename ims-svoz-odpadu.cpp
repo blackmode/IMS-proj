@@ -28,6 +28,8 @@
 #define DOBRA_ZPRACOVANI_POPELNICE 30 // s
 #define DOBA_VYKLAPENI_ODPADU 600 // s
 
+#define PRUMER_MNOZSTVI_ODPADU_CLOVEK 4 // KG
+
 #define BULDOZER_RYCHLOST_ZPRACOVANI_TUNY_ODPADU 3600 // = HODINA
 #define BULDOZER_KOLIK_ODPADU_ZPRACUJE_ZA_CAS 1000 // kg tunu zvladne
 
@@ -120,6 +122,14 @@ int ulice[POCET_ULIC][7] = {
   {12,14,0,0,0,4,10} // skladka
 };
 
+
+int produkce_odpadu[3][4] = {
+    {1,15,4,0},
+    {2,90,6,0},
+    {3,4,2,0}
+};
+
+
 // Vysledne pole pro nejratsi cestu
 int nejkratsi_cesta[POCET_KRIZOVATEK] = {0,0,0,0,0,0,0,0,0};
 
@@ -140,7 +150,7 @@ class Buldozer: public Process {
         
 		while(odpad_ke_zpracovani>0) 
         {
-            printf("\rBuldozer: ZPracovam odpad\n");
+            if (DEBUG_MODE)printf("\rBuldozer: ZPracovam odpad\n");
             if (odpad_ke_zpracovani > BULDOZER_KOLIK_ODPADU_ZPRACUJE_ZA_CAS) {
                 Wait(BULDOZER_RYCHLOST_ZPRACOVANI_TUNY_ODPADU);
                 odpad_ke_zpracovani = odpad_ke_zpracovani - BULDOZER_KOLIK_ODPADU_ZPRACUJE_ZA_CAS;
@@ -150,11 +160,24 @@ class Buldozer: public Process {
                 Wait(BULDOZER_RYCHLOST_ZPRACOVANI_TUNY_ODPADU*koeficient);
                 odpad_ke_zpracovani = 0;
                 buldozer_aktivni = 0;
-                printf("\n===================Buldozer: HOTOVO\n");
+                if (DEBUG_MODE)printf("\n===================Buldozer: HOTOVO\n");
             }
 		}
 	}
 };
+
+class Produkce_odpadu: public Process {
+    void Behavior () {
+        Wait(7*DEN);
+        for (int i = 0; i < 3; ++i)
+        {
+            produkce_odpadu[i][3] +=  produkce_odpadu[i][1] * PRUMER_MNOZSTVI_ODPADU_CLOVEK;
+        }
+        printf("\n PRODUKCE BYTOVKY: %f\n", (double)produkce_odpadu[0][3]);
+    }
+};
+
+
 
 class Auto : public Process {
 	double Prichod;                 // atribut každého Auta
@@ -302,8 +325,8 @@ class Auto : public Process {
 									ujeta_vzdalenost+=(delka_useku_ulice/pocet_domu_ulice); // auto se pohlo
 
 									// zpracovani popelnice  v prumeru 30s/popelnice
-									Wait(DOBRA_ZPRACOVANI_POPELNICE*typ_zastavby);
-									mnozstvi_odpadu_v_aute+=  ((typ_zastavby+1) * 500); // typ zastavby zastupuje pocet popelnic pro danou zastavbu * 50kg na kazdou popelnici
+									Wait(DOBRA_ZPRACOVANI_POPELNICE*produkce_odpadu[typ_zastavby][2]);
+									mnozstvi_odpadu_v_aute+= produkce_odpadu[typ_zastavby][3]; // typ zastavby zastupuje pocet popelnic pro danou zastavbu * 50kg na kazdou popelnici
 
 									// potreba aktualizovat pocet kg odpadu v aute
 									// [ sem doplnit pocet odpadu v aute ]
@@ -340,7 +363,7 @@ class Auto : public Process {
 
 
 					///======================== ZPRACOVANÍ ULICE ====================================================
-                    printf("\rZN: %d ULICE %d JE HOTOVA,KRIZOVATKA: %d den: %d cas Zpracovani: %f h ujeta_vzdalenost:  %d m cas: %f\n",znacka, trasy_auto[den_v_tydnu][zpracovano_ulic], aktualni_pozice, den_v_tydnu, (Time-Prichod)/3600, ujeta_vzdalenost,Time/3600 );
+                    if (DEBUG_MODE)printf("\rZN: %d ULICE %d JE HOTOVA,KRIZOVATKA: %d den: %d cas Zpracovani: %f h ujeta_vzdalenost:  %d m cas: %f\n",znacka, trasy_auto[den_v_tydnu][zpracovano_ulic], aktualni_pozice, den_v_tydnu, (Time-Prichod)/3600, ujeta_vzdalenost,Time/3600 );
 
         			// jakmile dojedu na konec a zpracuju celou ulici, tak nastavim aktualni pozici
 					aktualni_pozice = konec_ulice;
@@ -350,10 +373,10 @@ class Auto : public Process {
 				// V TOMTO miste mam zpracovany ulice
 				// mel bych se vratit zpet do depa
                
-                printf("\rZN: %d OBLAST JE HOTOVA, jsem na KRIZOVATCE: %d aktualni den: %d cas ztraveny Zpracovanim: %f h ujeta_vzdalenost:  %d m\n",znacka, aktualni_pozice, den_v_tydnu, (Time-Prichod)/3600, ujeta_vzdalenost );
+                if (DEBUG_MODE)printf("\rZN: %d OBLAST JE HOTOVA, jsem na KRIZOVATCE: %d aktualni den: %d cas ztraveny Zpracovanim: %f h ujeta_vzdalenost:  %d m\n",znacka, aktualni_pozice, den_v_tydnu, (Time-Prichod)/3600, ujeta_vzdalenost );
                 //ujeta_vzdalenost = 0;
                 seznam_ulic_hotov = 1;
-                printf("\r--------------------------------------------------------------------------------\n");
+                if (DEBUG_MODE)printf("\r--------------------------------------------------------------------------------\n");
 
                 // jsem ve stavu, kdy mame hotovo a musime jet vyklopit odpad a pak jet do depa
                 // musim jet s odpadem na skladku
@@ -395,7 +418,7 @@ class Auto : public Process {
                 // cekam v depu,
 
                 WaitUntil(je_vikend==0);
-                printf("KONEC ČEKANI, Vyjizdim Z GARAZE: cas: %f den: %d\n", Time/3600, den_v_tydnu);
+                //printf("KONEC ČEKANI, Vyjizdim Z GARAZE: cas: %f den: %d\n", Time/3600, den_v_tydnu);
 				// nevim jeste, jestli to vyuziju
 				//Q1.Insert(this);
 				//Passivate();
@@ -684,7 +707,12 @@ class Generator : public Event {  // generátor zákazníků
 	}
 };
 
-
+class Gen_odpad : public Event { 
+    void Behavior() {                     
+        (new Produkce_odpadu())->Activate();
+        Activate(Time+DEN);
+    }
+};
 
 // stridani dne v tydnu
 class Gen_den : public Event { 
@@ -745,11 +773,11 @@ int main()
 	// POZN: pokud je pole vetsi nez datovej vstup, tak zbytek pole dopisem vzdycky  hodnotou -1 !!! 
 
   Print("***** MODEL1 *****\n");
-  Init(0,2*TYDEN);              // inicializace experimentu
+  Init(0,1*TYDEN);              // inicializace experimentu
 
   // stridani dnu v tydnu
   (new Gen_den)->Activate(); 
- 
+  (new Gen_odpad)->Activate(); 
 
   	// jake trasy pojede auto A
 	int trasy_A[5][MAX_POCET_ULIC_DEN] = {
