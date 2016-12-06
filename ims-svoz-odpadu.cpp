@@ -133,7 +133,12 @@ public:
 
 	void Behavior () {
 		while(1) {
+            if (!je_vikend) {
 
+            }
+            else {
+
+            }
 		}
 	}
 };
@@ -147,6 +152,7 @@ class Auto : public Process {
     int mnozstvi_odpadu_v_aute; // kolik kg odpadu popelarsky vuz uveze
     int seznam_ulic_hotov; //  
     int seznam_ulic_pro_dany_den; //  
+    int znacka;
 
 	public: 
 		Auto (int trasy[5][MAX_POCET_ULIC_DEN]) {
@@ -170,11 +176,10 @@ class Auto : public Process {
 
 	void Behavior() {                 // popis chování auta
 		
-
 		while(1) {
             zacatek_prace:
 			Prichod = Time;               // čas vyjeti auta z depa
-
+            znacka = (rand()%5)+1;        // Oznacim si auto pri vstupu do systemu
 			// ja pracovni tyden
 			// overeni stavu , pokud je pracovni den a zaroven jeste nema auto hotov svuj prideleny seznam ulic
 			if (!je_vikend) 
@@ -314,8 +319,6 @@ class Auto : public Process {
 							}
 
 
-
-
 							// oznacim ulici jako zpracovanou 
 							aktualni_pozice = cilova_pozice;
 						}
@@ -323,7 +326,7 @@ class Auto : public Process {
 
 
 					///======================== ZPRACOVANÍ ULICE ====================================================
-                    printf("\rULICE %d JE HOTOVA,KRIZOVATKA: %d den: %d cas Zpracovani: %f h ujeta_vzdalenost:  %d m cas: %f\n", trasy_auto[den_v_tydnu][zpracovano_ulic], aktualni_pozice, den_v_tydnu, (Time-Prichod)/3600, ujeta_vzdalenost,Time/3600 );
+                    printf("\rZN: %d ULICE %d JE HOTOVA,KRIZOVATKA: %d den: %d cas Zpracovani: %f h ujeta_vzdalenost:  %d m cas: %f\n",znacka, trasy_auto[den_v_tydnu][zpracovano_ulic], aktualni_pozice, den_v_tydnu, (Time-Prichod)/3600, ujeta_vzdalenost,Time/3600 );
 
         			// jakmile dojedu na konec a zpracuju celou ulici, tak nastavim aktualni pozici
 					aktualni_pozice = konec_ulice;
@@ -333,7 +336,7 @@ class Auto : public Process {
 				// V TOMTO miste mam zpracovany ulice
 				// mel bych se vratit zpetdo depa
                
-                printf("\rOBLAST JE HOTOVA, jsem na KRIZOVATCE: %d aktualni den: %d cas ztraveny Zpracovanim: %f h ujeta_vzdalenost:  %d m\n", aktualni_pozice, den_v_tydnu, (Time-Prichod)/3600, ujeta_vzdalenost );
+                printf("\rZN: %d OBLAST JE HOTOVA, jsem na KRIZOVATCE: %d aktualni den: %d cas ztraveny Zpracovanim: %f h ujeta_vzdalenost:  %d m\n",znacka, aktualni_pozice, den_v_tydnu, (Time-Prichod)/3600, ujeta_vzdalenost );
                 //ujeta_vzdalenost = 0;
                 seznam_ulic_hotov = 1;
                 printf("\r--------------------------------------------------------------------------------\n");
@@ -356,21 +359,31 @@ class Auto : public Process {
                 // POCKAM DO dalsiho dne
                 //Wait(DEN-(Time-Prichod));
                 seznam_ulic_hotov = 0;
-                                printf("jedu do DEPA\n");
+                printf("jedu do DEPA cas: %f den: %d\n", Time/3600, den_v_tydnu);
 
                 // proces je v depu i po cely vikend!! nikam nejede, proto ho nevytahhuju o vikendu ź fronty, ale necham ho cekat
-                Q1.Insert(this);
-                Passivate();
 
-                printf("Je cas vyjet!!\n");
+
+                if (den_v_tydnu!=5 && den_v_tydnu!=6) {
+                    // proces byl znovu aktivovan ALE ted zahajim cekani, presunu se z parkoviste do garaze, kde pockam, dokud nezacne pracovni tyden
+
+                    Q1.Insert(this);
+                    Passivate();
+                    printf("Jedu z depaa:: Je cas vyjet!!\n");
+                }
+                else printf("Vyjizdim Z DEPA cas: %f den: %d\n", Time/3600, den_v_tydnu);
+
+                
                 //goto zacatek_prace;
 			}
 			else {
+                 printf("GARAZ: cas: %f den: %d\n", Time/3600, den_v_tydnu);
                 // zacal vikend, pockam 
                 //Wait(2*DEN);
                 // cekam v depu,
-                WaitUntil(je_vikend==0)
-                
+
+                WaitUntil(je_vikend==0);
+                printf("KONEC ČEKANI, Vyjizdim Z GARAZE: cas: %f den: %d\n", Time/3600, den_v_tydnu);
 				// nevim jeste, jestli to vyuziju
 				//Q1.Insert(this);
 				//Passivate();
@@ -680,18 +693,23 @@ class Gen_den : public Event {
   	}
 	if (den_v_tydnu >=0 && den_v_tydnu<5) 
 	{
-		// zatim nevim, jestli to vyuziju
-		while (!Q1.Empty()) {
-			printf("FRonta nebyla praznda!\n");
-			Process *aut = (Process *)Q1.GetFirst();
-			aut->Activate();
-		}// else printf("FRonta BYLaaaa praznda!\n");
+
 
 		den_v_tydnu++;
 		if (den_v_tydnu==5) {
 			je_vikend = 1;
 		}
-		Activate(Time+DEN);
+
+
+
+        // zatim nevim, jestli to vyuziju
+        while (!Q1.Empty()) {
+            printf("FRonta nebyla praznda!\n");
+            Process *aut = (Process *)Q1.GetFirst();
+            aut->Activate();
+        }// else printf("FRonta BYLaaaa praznda!\n");
+
+        Activate(Time+DEN);
 	}
 	else if (den_v_tydnu==5 || den_v_tydnu==6) {
 		
@@ -725,7 +743,7 @@ int main()
 	// POZN: pokud je pole vetsi nez datovej vstup, tak zbytek pole dopisem vzdycky  hodnotou -1 !!! 
 
   Print("***** MODEL1 *****\n");
-  Init(0,5*TYDEN);              // inicializace experimentu
+  Init(0,2*TYDEN);              // inicializace experimentu
 
   // stridani dnu v tydnu
   (new Gen_den)->Activate(); 
@@ -741,9 +759,10 @@ int main()
 
 	// popelarsky vuz A
   (new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
+  (new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
   //(new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
   Run();                     // simulace
- Tabulka.Output();
+ //Tabulka.Output();
 
   return 0;
 }
