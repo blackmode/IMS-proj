@@ -11,22 +11,22 @@
 
 
 // počet ULIC
-#define POCET_ULIC 16
+#define POCET_ULIC 43
 #define MAX_POCET_ULIC_DEN 10 // Kolik ulic bude maximalne na den zpracovavat jedno auto
 
-#define DEPO 9 		//  uzel(KRIZOVATKA) na kterem se nachazi depo odkud vyrazi auto
-#define SKLADKA 10	//  uzel(SKLADKA) na kterem se nachazi skladka kam jede auto vyvezt odpad 
+#define DEPO 35 		//  uzel(KRIZOVATKA) na kterem se nachazi depo odkud vyrazi auto
+#define SKLADKA 36	//  uzel(SKLADKA) na kterem se nachazi skladka kam jede auto vyvezt odpad 
 
 // počet křižovatek
-#define POCET_KRIZOVATEK 11
+#define POCET_KRIZOVATEK 36
 
 // rychlost auta
 #define PRUMERNA_RYCHLOST_PRESUNU_MEZI_ULICEMI 11 // m/s
 #define PRUMERNA_RYCHLOST_PRESUNU_MEZI_DOMY 3 // m/s
 
 // doba zpracovani popelnice
-#define DOBRA_ZPRACOVANI_POPELNICE 30 // s
-#define DOBA_VYKLAPENI_ODPADU 600 // s
+#define DOBRA_ZPRACOVANI_POPELNICE 33 // s
+#define DOBA_VYKLAPENI_ODPADU 921 // s
 
 #define PRUMER_MNOZSTVI_ODPADU_CLOVEK 4 // KG
 
@@ -63,13 +63,16 @@ int je_vikend = 0;
 int odpad_ke_zpracovani = 0;
 int buldozer_aktivni = 0;
 
+int svezeny_odpad = 0;
+int celkova_ujeta_vzdalenost_auta = 0;
+
 /** 
 * modelovana oblast => graf krizovatek 
 * POKUD JEDNA ULICE BUDE MIT VICE JAK DVA UZLY (bude nutne ji rozdelit) tak ty uzly pojmenovavat postupne tak,
 * aby, nejnizsi ID uzlu byl zacatek/konec ulice a nejvyssi ID uzlu konec/zacatek ALE NE Prostredek
 * matice sousednosti
 */
-int graph[POCET_KRIZOVATEK][POCET_KRIZOVATEK] = {
+int graph2[POCET_KRIZOVATEK][POCET_KRIZOVATEK] = {
 	//  0  1  2  3  4  5  6  7  8  9  10
 	   {0, 4, 0, 0, 0, 0, 0, 8, 0, 0, 0},	// 0
 	   {4, 0, 8, 0, 0, 0, 0, 11, 0, 0, 0},	// 1
@@ -84,6 +87,45 @@ int graph[POCET_KRIZOVATEK][POCET_KRIZOVATEK] = {
 	   {0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0}	// 10
 };
 
+int graph[POCET_KRIZOVATEK][POCET_KRIZOVATEK] ={
+{0,80,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,335,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{80,0,110,0,0,0,0,0,225,0,0,0,0,0,0,0,0,0,0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,110,0,150,105,0,0,230,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,150,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,105,0,0,70,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,70,0,75,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,75,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,230,0,0,0,0,0,76,219,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,225,0,0,0,0,0,76,0,0,0,0,0,0,194,320,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,219,0,0,128,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,128,0,110,211,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,110,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,211,0,0,90,176,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,90,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,194,0,0,0,176,0,0,171,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,320,0,0,0,0,0,171,0,128,126,0,0,0,254,0,0,0,0,0,0,0,0,0,0,0,145,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,128,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,126,0,0,55,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,55,0,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,100,0,112,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,112,0,93,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,254,0,0,0,0,93,0,345,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+{335,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,345,0,0,0,0,0,0,0,118,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,110,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,76,0,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,76,0,125,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,125,0,159,0,0,113,185,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,159,0,115,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,115,0,140,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,118,0,0,0,0,0,140,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,113,0,0,0,0,0,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,185,0,0,0,0,0,112,0,125,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,112,0,0,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,145,0,0,0,0,0,0,0,110,0,0,0,0,0,0,0,0,0,0,105,9423 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,125,0,105,0,0 },
+{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9423,0,0 }};
+
+
 /** 
 * modelovana oblast => popis ulic
 * ZDE DEFINUJEME, VSECHNY POTREBNY UDEJA O ULICICH, jako je pocet domu, delka ulice, napojueni na krizovatky
@@ -91,7 +133,8 @@ int graph[POCET_KRIZOVATEK][POCET_KRIZOVATEK] = {
 * proste ma vic uzlu...
 * Popis sloupců: { ID ULICE , DELKA ULICE V METRECH ,počet domů ,typ zastavby ,typ ulice , křižovatka X , křižovatka Y }
 */
-int ulice[POCET_ULIC][7] = {
+// TEST GRAF
+int ulice2[POCET_ULIC][7] = {
   {1,7,4,1,0,7,8},	// 0
 
   {2,1,1,1,0,7,6},	// 1
@@ -122,6 +165,53 @@ int ulice[POCET_ULIC][7] = {
   {12,14,0,0,0,4,10} // skladka
 };
 
+// NASE MESTO
+int ulice[POCET_ULIC][7] ={
+{1 ,80,1 ,3,0, 0 ,1    },
+{1 ,225, 4 ,1,0, 1 ,8    },
+{1 ,194, 9 ,2,0, 8 ,14    },
+{2 ,110, 8 ,1,0, 1 ,2    },
+{2 ,105, 4 ,1,0, 2 ,4    },
+{3 ,150, 7 ,3,0, 3 ,2    },
+{3 ,230, 9 ,1,0, 2 ,7    },
+{4 ,70,4 ,3,0, 4 ,5    },
+{5 ,75,5 ,3,0, 5 ,6    },
+{6 ,76,5 ,1,0, 8 ,7    },
+{6 ,219, 10,3,0, 7 ,9    },
+{7 ,128, 5 ,3,0, 9 ,10    },
+{7 ,110, 6 ,3,0, 10,11    },
+{8 ,211, 10,3,0, 10,12    },
+{9 ,90,4 ,3,0, 12,13    },
+{10,176, 4 ,1,0, 12,14    },
+{11,320, 7 ,1,0, 8 ,15    },
+{11,145, 8 ,1,0, 15,33    },
+{12,171, 5 ,1,0, 14,15    },
+{13,128, 3 ,3,0, 15,16    },
+{14,126, 8 ,1,0, 15,17    },
+{15,55,2 ,3,0, 17,18    },
+{16,100, 4 ,1,0, 18,19    },
+{16,112, 6 ,3,0, 19,20    },
+{17,158, 6 ,1,0, 1 ,19    },
+{18,93,7 ,3,0, 20,21    },
+{19,345, 17,1,0, 22,21    },
+{19,254, 14,1,0, 21,15    },
+{19,110, 10,1,0, 23,33    },
+{20,335, 9 ,3,0, 22,0     },
+{22,140, 16,3,0, 28,29    },
+{23,76,6 ,3,0, 24,25    },
+{23,125, 9 ,3,0, 25,26    },
+{23,113, 3 ,3,0, 26,30    },
+{24,159, 4 ,3,0, 26,27    },
+{25,115, 8 ,1,0, 27,28    },
+{26,118, 7 ,3,0, 22,29    },
+{27,185, 6 ,1,0, 26,31    },
+{27,105, 3 ,1,0, 31,32    },
+{28,112, 3 ,3,0, 33,34    },
+{29,125, 4 ,3,0, 31,34    },
+{30,11525, 1 ,0,0, 33,35    },
+{31,9423, 1 ,0,0, 34,36    }};
+
+
 
 int produkce_odpadu[3][4] = {
     {1,15,4,0},
@@ -135,22 +225,24 @@ int nejkratsi_cesta[POCET_KRIZOVATEK] = {0,0,0,0,0,0,0,0,0};
 
 //  deklarace  globálních  objektů
 Facility  Skladka("Skládka odpadu");
-Histogram Tabulka("Tabulka",0,1,15);
+Histogram Bagr_doba("Doba Bagrovani odpadu",0,HODINA,30);
 Stat Odpad;
 
 
 class Buldozer: public Process {
     double koeficient;
+    double Prichod;
     public: 
         Buldozer () {
             koeficient = 1.0;
         }   
 
 	void Behavior () {
-        
+        Prichod = Time;
 		while(odpad_ke_zpracovani>0) 
         {
-            if (DEBUG_MODE)printf("\rBuldozer: ZPracovam odpad\n");
+            Bagr_doba(Time); 
+            printf("\rBuldozer: ZPracovam odpad\n");
             if (odpad_ke_zpracovani > BULDOZER_KOLIK_ODPADU_ZPRACUJE_ZA_CAS) {
                 Wait(BULDOZER_RYCHLOST_ZPRACOVANI_TUNY_ODPADU);
                 odpad_ke_zpracovani = odpad_ke_zpracovani - BULDOZER_KOLIK_ODPADU_ZPRACUJE_ZA_CAS;
@@ -160,8 +252,9 @@ class Buldozer: public Process {
                 Wait(BULDOZER_RYCHLOST_ZPRACOVANI_TUNY_ODPADU*koeficient);
                 odpad_ke_zpracovani = 0;
                 buldozer_aktivni = 0;
-                if (DEBUG_MODE)printf("\n===================Buldozer: HOTOVO\n");
-            }
+                printf("\n===================Buldozer: HOTOVO\n");
+            }           
+            Bagr_doba(Time-Prichod); 
 		}
 	}
 };
@@ -327,6 +420,7 @@ class Auto : public Process {
 									// zpracovani popelnice  v prumeru 30s/popelnice
 									Wait(DOBRA_ZPRACOVANI_POPELNICE*produkce_odpadu[typ_zastavby][2]);
 									mnozstvi_odpadu_v_aute+= produkce_odpadu[typ_zastavby][3]; // typ zastavby zastupuje pocet popelnic pro danou zastavbu * 50kg na kazdou popelnici
+                                    
 
 									// potreba aktualizovat pocet kg odpadu v aute
 									// [ sem doplnit pocet odpadu v aute ]
@@ -336,6 +430,8 @@ class Auto : public Process {
 							}
 							else {
 								Odpad(mnozstvi_odpadu_v_aute);
+                                svezeny_odpad+=mnozstvi_odpadu_v_aute;
+
 								if (DEBUG_MODE) printf("\nVyvazim odpad: %d\n",mnozstvi_odpadu_v_aute);
 								// musim jet s odpadem na skladku
 								presun(aktualni_pozice,SKLADKA,&ujeta_vzdalenost);
@@ -363,7 +459,7 @@ class Auto : public Process {
 
 
 					///======================== ZPRACOVANÍ ULICE ====================================================
-                    if (DEBUG_MODE)printf("\rZN: %d ULICE %d JE HOTOVA,KRIZOVATKA: %d den: %d cas Zpracovani: %f h ujeta_vzdalenost:  %d m cas: %f\n",znacka, trasy_auto[den_v_tydnu][zpracovano_ulic], aktualni_pozice, den_v_tydnu, (Time-Prichod)/3600, ujeta_vzdalenost,Time/3600 );
+                    printf("\rZN: %d ULICE %d JE HOTOVA,KRIZOVATKA: %d den: %d cas Zpracovani: %f h ujeta_vzdalenost:  %d m cas: %f\n",znacka, trasy_auto[den_v_tydnu][zpracovano_ulic], aktualni_pozice, den_v_tydnu, (Time-Prichod)/3600, ujeta_vzdalenost,Time/3600 );
 
         			// jakmile dojedu na konec a zpracuju celou ulici, tak nastavim aktualni pozici
 					aktualni_pozice = konec_ulice;
@@ -394,6 +490,7 @@ class Auto : public Process {
 
                 // jedu zpet do depa
                 presun(SKLADKA,DEPO,&ujeta_vzdalenost);
+                celkova_ujeta_vzdalenost_auta+=ujeta_vzdalenost;
                 aktualni_pozice = DEPO;
 
                 // POCKAM DO dalsiho dne
@@ -420,11 +517,8 @@ class Auto : public Process {
                 WaitUntil(je_vikend==0);
                 //printf("KONEC ČEKANI, Vyjizdim Z GARAZE: cas: %f den: %d\n", Time/3600, den_v_tydnu);
 				// nevim jeste, jestli to vyuziju
-				//Q1.Insert(this);
-				//Passivate();
-                //goto zacatek_prace;
 			}
-			Tabulka(Time-Prichod); // wtf??
+			
 		} // end while
 
 	}
@@ -542,40 +636,16 @@ class Auto : public Process {
 			printf("|%d|", count);
 	 }
 
-
-  // A utility function to print the constructed distance
-  // array
-  // DEBUG FUNKCE
-  int printAllPath(int dist[], int n, int parent[],int src, int dest)
-  {
-	  printf("Vertex\t\t  Distance\t\tPath");
-	  for (int i = 0; i < POCET_KRIZOVATEK; i++)
-	  {
-		  printf("\n%d -> %d \t\t\t %d\t\t ", src, i, dist[i]);
-		  printPath(parent, i, src);
-	  }
-  }
-
-
-  // Funtion that implements Dijkstra's single source shortest path
-  // algorithm for a graph represented using adjacency matrix
   // representation
   int dijkstra(int graph[POCET_KRIZOVATEK][POCET_KRIZOVATEK], int src, int dest)
   {
 		int dist[POCET_KRIZOVATEK];  // The output array. dist[i] will hold
-					// the shortest distance from src to i
-
-		// sptSet[i] will true if vertex i is included / in shortest
-		// path tree or shortest distance from src to i is finalized
 		bool sptSet[POCET_KRIZOVATEK];
-
-		// Parent array to store shortest path tree
 		int parent[POCET_KRIZOVATEK];
 		   
 		for (int i = 0;i<POCET_KRIZOVATEK; i++)
 			parent[i] = -1;
 		
-		// Initialize all distances as INFINITE and stpSet[] as false
 		for (int i = 0; i < POCET_KRIZOVATEK; i++)
 		{
 		  parent[0] = -1;
@@ -583,28 +653,14 @@ class Auto : public Process {
 		  sptSet[i] = false;
 		}
 
-		// Distance of source vertex from itself is always 0
 		dist[src] = 0;
 
-		// Find shortest path for all vertices V
 		for (int count = 0; count < POCET_KRIZOVATEK-1; count++)
 		{
-		  // Pick the minimum distance vertex from the set of
-		  // vertices not yet processed. u is always equal to src
-		  // in first iteration.
 		  int u = minDistance(dist, sptSet);
-
-		  // Mark the picked vertex as processed
 		  sptSet[u] = true;
 
-		  // Update dist value of the adjacent vertices of the
-		  // picked vertex.
 		  for (int v = 0; v < POCET_KRIZOVATEK; v++)
-
-			  // Update dist[v] only if is not in sptSet, there is
-			  // an edge from u to v, and total weight of path from
-			  // src to v through u is smaller than current value of
-			  // dist[v]
 			  if (!sptSet[v] && graph[u][v] &&
 				  dist[u] + graph[u][v] < dist[v])
 			  {
@@ -768,7 +824,7 @@ int main()
 	// POZN: pokud je pole vetsi nez datovej vstup, tak zbytek pole dopisem vzdycky  hodnotou -1 !!! 
 
   Print("***** MODEL *****\n");
-  Init(0,1*TYDEN);              // inicializace experimentu
+  Init(0,4*TYDEN);              // inicializace experimentu
 
   // stridani dnu v tydnu
   (new Gen_den)->Activate(); 
@@ -776,11 +832,11 @@ int main()
 
   	// jake trasy pojede auto A
 	int trasy_A[5][MAX_POCET_ULIC_DEN] = {
-		{3,2,1,4,5,6,11,7,10,9},
-		{1,2,3,4,5,6,11,7,8,9},
-		{1,2,3,4,5,6,11,7,8,9},
-		{1,2,3,4,5,6,11,7,8,9},
-		{1,2,3,4,5,6,11,7,8,9}
+		{3,2,1,4,12,6,13,7,26,9},
+		{28,29,27,24,29,16,11,8,14,17},
+		{18,2,4,25,19,23,22,21,20,26},
+		{18,17,3,4,5,6,23,21,16,9},
+		{1,2,13,4,27,24,11,7,8,25}
 	};
 
 	// popelarsky vuz A
@@ -788,7 +844,8 @@ int main()
 //  (new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
   //(new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
   Run();                     // simulace
- //Tabulka.Output();
-
+ Bagr_doba.Output();
+Odpad.Output();
+Skladka.Output();
   return 0;
 }
