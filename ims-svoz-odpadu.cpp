@@ -46,6 +46,8 @@ const int ULICE_TYP_ZASTAVBY = 4;	// bytovka/rodinny dum/panelak apod.
 const int ULICE_KRIZOVATKA_X = 5;	// kazda ulice ci jeji cast je definovana krizovatkou/uzlem X 
 const int ULICE_KRIZOVATKA_Y = 6;	// kazda ulice ci jeji cast je definovana krizovatkou/uzlem Y
 
+Queue Q1;
+
 // jakej je zrovne den v tydnu
 int den_v_tydnu = -1;
 
@@ -119,7 +121,7 @@ int nejkratsi_cesta[POCET_KRIZOVATEK] = {0,0,0,0,0,0,0,0,0};
 //  deklarace  globálních  objektů
 Facility  Skladka("Skládka odpadu");
 Histogram Tabulka("Tabulka",0,1,15);
-
+Stat Odpad;
 
 
 class Buldozer: public Process {
@@ -285,6 +287,7 @@ class Auto : public Process {
 								}
 							}
 							else {
+								Odpad(kapacita_vozu);
 								if (DEBUG_MODE) printf("\nVyvazim odpad: %d\n",kapacita_vozu);
 								// musim jet s odpadem na skladku
 								presun(aktualni_pozice,SKLADKA,&ujeta_vzdalenost);
@@ -322,6 +325,11 @@ class Auto : public Process {
 				if (DEBUG_MODE) printf("\nOBLAST JE HOTOVA, SKONCIL JSEM NA KRIZOVATCE: %d\n", aktualni_pozice);
 				
 
+			}
+			else {
+				// nevim jeste, jestli to vyuziju
+				// Q1.Insert(this);
+				// Passivate();
 			}
 			Tabulka(Time-Prichod); // wtf??
 		} // end while
@@ -618,6 +626,13 @@ class Gen_den : public Event {
   	}
 	if (den_v_tydnu >=0 && den_v_tydnu<5) 
 	{
+		// zatim nevim, jestli to vyuziju
+		if (!Q1.Empty()) {
+			printf("FRonta nebyla praznda!\n");
+			Process *aut = (Process *)Q1.GetFirst();
+			aut->Activate();
+		}
+
 		den_v_tydnu++;
 		if (den_v_tydnu==5) {
 			je_vikend = 1;
@@ -656,7 +671,7 @@ int main()
 	// POZN: pokud je pole vetsi nez datovej vstup, tak zbytek pole dopisem vzdycky  hodnotou -1 !!! 
 
   Print("***** MODEL1 *****\n");
-  Init(0,24*HODINA);              // inicializace experimentu
+  Init(0,2*DEN);              // inicializace experimentu
 
   // stridani dnu v tydnu
   (new Gen_den)->Activate(); 
@@ -672,9 +687,11 @@ int main()
 
 	// popelarsky vuz A
   (new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
+  (new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
   Run();                     // simulace
   Skladka.Output();              // tisk výsledků
   Tabulka.Output();
+  Odpad.Output();
 
   return 0;
 }
