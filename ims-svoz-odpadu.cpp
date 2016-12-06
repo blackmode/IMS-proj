@@ -28,6 +28,9 @@
 #define DOBRA_ZPRACOVANI_POPELNICE 30 // s
 #define DOBA_VYKLAPENI_ODPADU 600 // s
 
+#define BULDOZER_RYCHLOST_ZPRACOVANI_TUNY_ODPADU 3600 // = HODINA
+#define BULDOZER_KOLIK_ODPADU_ZPRACUJE_ZA_CAS 1000 // kg tunu zvladne
+
 // doba zpracovani popelnice
 #define MAX_KAPACITA_ODPADU_V_AUTE 11000 // kg => 11 tun
 
@@ -56,6 +59,7 @@ int den_v_tydnu = -1;
 int je_vikend = 0;
 
 int odpad_ke_zpracovani = 0;
+int buldozer_aktivni = 0;
 
 /** 
 * modelovana oblast => graf krizovatek 
@@ -126,18 +130,27 @@ Stat Odpad;
 
 
 class Buldozer: public Process {
-public: 
-	Buldozer() {
-
-	}
+    double koeficient;
+    public: 
+        Buldozer () {
+            koeficient = 1.0;
+        }   
 
 	void Behavior () {
-		while(1) {
-            if (!je_vikend) {
-
-            }
-            else {
-
+        
+		while(odpad_ke_zpracovani>0) 
+        {
+            printf("\rBuldozer: ZPracovam odpad\n");
+            if (odpad_ke_zpracovani > BULDOZER_KOLIK_ODPADU_ZPRACUJE_ZA_CAS) {
+                Wait(BULDOZER_RYCHLOST_ZPRACOVANI_TUNY_ODPADU);
+                odpad_ke_zpracovani = odpad_ke_zpracovani - BULDOZER_KOLIK_ODPADU_ZPRACUJE_ZA_CAS;
+                buldozer_aktivni = 1;
+            } else {
+                koeficient = odpad_ke_zpracovani/BULDOZER_RYCHLOST_ZPRACOVANI_TUNY_ODPADU;
+                Wait(BULDOZER_RYCHLOST_ZPRACOVANI_TUNY_ODPADU*koeficient);
+                odpad_ke_zpracovani = 0;
+                buldozer_aktivni = 0;
+                printf("\n===================Buldozer: HOTOVO\n");
             }
 		}
 	}
@@ -310,6 +323,8 @@ class Auto : public Process {
 								Release(Skladka);
 
 								odpad_ke_zpracovani+=mnozstvi_odpadu_v_aute;
+                                if (!buldozer_aktivni) 
+                                    (new Buldozer())->Activate();
 								mnozstvi_odpadu_v_aute = 0;
 
 								//vracim se ze skladky zpet do te ulice, kterou jsem mel zpracovavat
@@ -334,7 +349,7 @@ class Auto : public Process {
 				}
 
 				// V TOMTO miste mam zpracovany ulice
-				// mel bych se vratit zpetdo depa
+				// mel bych se vratit zpet do depa
                
                 printf("\rZN: %d OBLAST JE HOTOVA, jsem na KRIZOVATCE: %d aktualni den: %d cas ztraveny Zpracovanim: %f h ujeta_vzdalenost:  %d m\n",znacka, aktualni_pozice, den_v_tydnu, (Time-Prichod)/3600, ujeta_vzdalenost );
                 //ujeta_vzdalenost = 0;
@@ -350,6 +365,9 @@ class Auto : public Process {
                 Release(Skladka);
 
                 odpad_ke_zpracovani+=mnozstvi_odpadu_v_aute;
+                if (!buldozer_aktivni) {
+                    (new Buldozer())->Activate();
+                }
                 mnozstvi_odpadu_v_aute = 0;
 
                 // jedu zpet do depa
@@ -362,18 +380,13 @@ class Auto : public Process {
                 printf("jedu do DEPA cas: %f den: %d\n", Time/3600, den_v_tydnu);
 
                 // proces je v depu i po cely vikend!! nikam nejede, proto ho nevytahhuju o vikendu ź fronty, ale necham ho cekat
-
-
                 if (den_v_tydnu!=5 && den_v_tydnu!=6) {
                     // proces byl znovu aktivovan ALE ted zahajim cekani, presunu se z parkoviste do garaze, kde pockam, dokud nezacne pracovni tyden
-
                     Q1.Insert(this);
                     Passivate();
                     printf("Jedu z depaa:: Je cas vyjet!!\n");
                 }
-                else printf("Vyjizdim Z DEPA cas: %f den: %d\n", Time/3600, den_v_tydnu);
 
-                
                 //goto zacatek_prace;
 			}
 			else {
@@ -682,7 +695,6 @@ class Generator : public Event {  // generátor zákazníků
 };
 
 
- 
 
 // stridani dne v tydnu
 class Gen_den : public Event { 
@@ -748,6 +760,7 @@ int main()
   // stridani dnu v tydnu
   (new Gen_den)->Activate(); 
  
+
   	// jake trasy pojede auto A
 	int trasy_A[5][MAX_POCET_ULIC_DEN] = {
 		{3,2,1,4,5,6,11,7,10,9},
@@ -759,7 +772,7 @@ int main()
 
 	// popelarsky vuz A
   (new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
-  (new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
+//  (new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
   //(new Generator(trasy_A))->Activate(); // generátor zákazníků, aktivace
   Run();                     // simulace
  //Tabulka.Output();

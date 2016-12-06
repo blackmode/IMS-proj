@@ -2,6 +2,7 @@
 CPP=g++
 PROGRAM = ims-svoz-odpadu
 STATS = stats.out
+DOCPDF = dokumentace
 
 all: $(PROGRAM).o
 	$(CPP) -o $(PROGRAM) $(PROGRAM).o -lsimlib -lm -Wall -Wextra
@@ -22,7 +23,7 @@ memtest:
 
 zip:
 	rm -f 06_xsluns01_xpokor63.zip 
-	zip 06_xsluns01_xpokor63.zip $(PROGRAM).cpp Makefile dokumentace.pdf
+	zip 06_xsluns01_xpokor63.zip $(PROGRAM).cpp Makefile $(DOCPDF).pdf
 
 github:
 	git pull origin master
